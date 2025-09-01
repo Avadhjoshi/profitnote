@@ -1,0 +1,73 @@
+<%- include('../include/header') %>
+<%- include('../include/sidebar') %>
+
+<div class="card car-primary m-4">
+  <!-- Card Header -->
+  <div class="card-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0 fw-bold fs-3">
+            <i class="fas fa-user-plus me-2 text-success"></i>Add User
+          </h1>
+        </div>
+        <div class="col-sm-6 text-end">
+          <a href="/admin/users" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Back to Users
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <form method="POST" action="/admin/users/add">
+    <div class="card-body">
+      <div class="form-group mb-3">
+        <label for="full_name">Full Name</label>
+        <input required type="text" class="form-control" id="full_name" name="full_name" placeholder="Enter full name">
+      </div>
+
+      <div class="form-group mb-3">
+        <label for="email">Email</label>
+        <input required type="email" class="form-control" id="email" name="email" placeholder="Enter email address">
+      </div>
+
+      <div class="form-group mb-3">
+        <label for="phone">Phone</label>
+        <input required type="text" class="form-control" id="phone" name="phone" placeholder="Enter phone number">
+      </div>
+
+      <div class="form-group mb-3">
+        <label for="status">Status</label>
+        <select class="form-control" name="status" id="status">
+          <option value="ACTIVE" selected>Active</option>
+          <option value="INACTIVE">Inactive</option>
+          <option value="BANNED">Banned</option>
+        </select>
+      </div>
+
+      <div class="form-group mb-3">
+        <label for="role">Role</label>
+        <select class="form-control" name="role" id="role">
+          <option value="TRADER" selected>Trader</option>
+          <option value="ADMIN">Admin</option>
+          <option value="VIEWER">Viewer</option>
+        </select>
+      </div>
+
+      <div class="form-group mb-3">
+        <label for="password">Password</label>
+        <input required type="text" class="form-control" id="password" name="password" placeholder="Enter password">
+      </div>
+    </div>
+
+    <!-- Form Footer -->
+    <div class="card-footer">
+      <button type="submit" class="btn btn-success">Create</button>
+      <a href="/admin/users" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<%- include('../include/footer') %>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profit Note | Advnaced Trading Software</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://profitnote.acutetech.in/assets/tailwind-config.js"></script>
+  <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- jQuery (required for Select2 and Datepicker) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- jQuery UI Datepicker -->
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script><!-- GitHub Calendar CSS/JS -->
+
+
+  <style>[x-cloak] { display: none !important; }</style>
+</head>
+<body class="bg-[#0f172a] text-white" style="font-family: 'Poppins', sans-serif;">
+
+<!-- Wrapper with Alpine state -->
+<div x-data="{ open: false }" class="flex flex-col md:flex-row min-h-screen">
+
+  <!-- Mobile Top Bar -->
+  <div class="md:hidden flex items-center justify-between bg-[#1e293b] p-4">
+    <button @click="open = !open" class="text-white">
+      <i class="fas fa-bars text-xl"></i>
+    </button>
+    <div class="text-lg font-bold">Profit Note</div>
+    <div class="bg-white rounded-full w-8 h-8 flex items-center justify-center text-black font-bold">P</div>
+  </div>

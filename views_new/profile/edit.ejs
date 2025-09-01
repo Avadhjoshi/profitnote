@@ -1,0 +1,102 @@
+<%- include('../include/header') %>
+<%- include('../include/sidebar') %>
+
+<div class="max-w-5xl mx-auto p-6 bg-[#1e293b] text-white rounded-xl shadow">
+  <h2 class="text-2xl font-semibold mb-6 border-b border-gray-600 pb-3">👤 Edit Profile</h2>
+
+  <!-- Profile Update Form -->
+  <form action="/profile/update" method="POST" class="space-y-6" onsubmit="return disableButton(this)">
+    <div class="bg-[#0f172a] border border-gray-700 rounded-lg p-4">
+      <h3 class="text-xl font-semibold mb-4 text-white">Basic Info</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm mb-1">Full Name</label>
+          <input type="text" name="full_name" value="<%= user.full_name %>" class="form-input w-full bg-[#334155] text-white border border-[#475569] rounded p-1" required />
+        </div>
+
+        <div>
+          <label class="block text-sm mb-1">Email</label>
+          <input type="email" name="email" value="<%= user.email %>" readonly class="form-input w-full bg-[#334155] text-white border border-[#475569] rounded p-1 opacity-70" />
+        </div>
+
+        <div>
+          <label class="block text-sm mb-1">Phone</label>
+          <input type="text" name="phone" value="<%= user.phone || '' %>" class="form-input w-full bg-[#334155] text-white border border-[#475569] rounded p-1" />
+        </div>
+      </div>
+    </div>
+    <div class="flex justify-end">
+      <button type="submit" class="bg-green-600 hover:bg-green-700 px-6 py-2 rounded submit-btn">Update Profile</button>
+    </div>
+  </form>
+
+  <!-- Change Password Form -->
+  <form action="/profile/change-password" method="POST" class="space-y-6 mt-10" onsubmit="return disableButton(this)">
+    <div class="bg-[#0f172a] border border-gray-700 rounded-lg p-4">
+      <h3 class="text-xl font-semibold mb-4 text-white">🔐 Change Password</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm mb-1">Current Password</label>
+          <input type="password" name="current_password" class="form-input w-full bg-[#334155] text-white border border-[#475569] rounded p-1" required />
+        </div>
+
+        <div>
+          <label class="block text-sm mb-1">New Password</label>
+          <input type="password" name="new_password" class="form-input w-full bg-[#334155] text-white border border-[#475569] rounded p-1" required />
+        </div>
+
+        <div>
+          <label class="block text-sm mb-1">Confirm New Password</label>
+          <input type="password" name="confirm_password" class="form-input w-full bg-[#334155] text-white border border-[#475569] rounded p-1" required />
+        </div>
+      </div>
+    </div>
+    <div class="flex justify-end">
+      <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded submit-btn">Change Password</button>
+    </div>
+  </form>
+</div>
+
+<!-- ✅ Toastify CDN -->
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
+<!-- ✅ Flash Toasts -->
+<script>
+  <% if (locals.success && locals.success.length > 0) { %>
+    Toastify({
+      text: "<%= locals.success[0] %>",
+      duration: 4000,
+      gravity: "top",
+      position: "right",
+      backgroundColor: "#16a34a",
+      className: "rounded-md text-sm"
+    }).showToast();
+  <% } %>
+
+  <% if (locals.error && locals.error.length > 0) { %>
+    Toastify({
+      text: "<%= locals.error[0] %>",
+      duration: 4000,
+      gravity: "top",
+      position: "right",
+      backgroundColor: "#dc2626",
+      className: "rounded-md text-sm"
+    }).showToast();
+  <% } %>
+</script>
+
+<!-- ✅ Prevent multiple submits -->
+<script>
+  function disableButton(form) {
+    const btn = form.querySelector('.submit-btn');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = 'Please wait...';
+      btn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+    return true;
+  }
+</script>
+
+<%- include('../include/footer') %>

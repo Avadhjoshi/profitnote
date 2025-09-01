@@ -1,0 +1,32 @@
+<%- include('../include/header') %>
+<%- include('../include/sidebar') %>
+
+<div class="p-6 text-white">
+  <h2 class="text-3xl font-bold mb-6 flex items-center gap-2">📊 All Chart Analyses</h2>
+
+  <% if (reports.length === 0) { %>
+    <div class="text-gray-400">No reports found.</div>
+  <% } %>
+
+  <div class="space-y-8">
+    <% reports.forEach(report => { %>
+      <div class="bg-[#1e293b] p-6 rounded-xl border border-gray-700 shadow">
+        <h3 class="text-xl font-semibold mb-3">
+              📅 <%= new Date(report.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) %>
+        </h3>
+
+        <% if (report.image) { %>
+          <div class="mb-4">
+            <img src="/uploads/<%= report.image %>" alt="Chart Image" class="rounded-lg border border-gray-500 w-full max-w-xl">
+          </div>
+        <% } %>
+
+        <div class="prose max-w-3xl prose-invert">
+          <%- marked(report.report_content || 'No content.') %>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</div>
+
+<%- include('../include/footer') %>

@@ -1,0 +1,140 @@
+<%- include('include/header') %>
+<%- include('include/sidebar') %>
+
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-2xl font-semibold">Calendar</h1>
+  <form method="GET" class="flex gap-2 items-center">
+    <!-- Market Filter -->
+    <select name="market" onchange="this.form.submit()" class="bg-[#1e293b] text-white border border-gray-600 text-sm px-3 py-2 rounded-md">
+      <% marketList.forEach(m => { %>
+        <option value="<%= m.id %>" <%= market == m.id ? 'selected' : '' %>><%= m.market_name %></option>
+      <% }) %>
+    </select>
+
+    <!-- Month Filter -->
+    <select name="month" onchange="this.form.submit()" class="bg-[#1e293b] text-white border border-gray-600 text-sm px-3 py-2 rounded-md">
+      <% for (let m = 0; m < 12; m++) { %>
+        <option value="<%= m %>" <%= m == month ? 'selected' : '' %>>
+          <%= new Date(2000, m).toLocaleString('default', { month: 'long' }) %>
+        </option>
+      <% } %>
+    </select>
+
+    <!-- Year Filter -->
+    <select name="year" onchange="this.form.submit()" class="bg-[#1e293b] text-white border border-gray-600 text-sm px-3 py-2 rounded-md">
+      <% for (let y = 2024; y <= 2030; y++) { %>
+        <option value="<%= y %>" <%= y == year ? 'selected' : '' %>><%= y %></option>
+      <% } %>
+    </select>
+  </form>
+</div>
+
+<%
+  const isLoss = parseFloat(stat.totalPnl) < 0;
+  const pnlColor = isLoss ? 'text-red-400' : 'text-green-400';
+  const currency = market == 2 ? '$' : '₹';
+%>
+
+<!-- Stat Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8 text-base">
+  <!-- TOTAL P&L -->
+ <!-- TOTAL P&L -->
+<div class="bg-[#1e293b] p-6 rounded-2xl shadow-xl">
+  <div class="flex justify-between items-center">
+    <span class="uppercase text-sm text-gray-400">Total P&L</span>
+    <i class="fas fa-chart-line <%= pnlColor %> text-xl"></i>
+  </div>
+
+  <!-- Net P&L -->
+  <div class="text-3xl font-bold <%= pnlColor %> mt-2">
+    <%= isLoss ? '▼ ' : '▲ ' %><%= currency %><%= Math.abs(stat.netPnl).toLocaleString('en-IN', { minimumFractionDigits: 2 }) %>
+  </div>
+
+  <!-- Breakdown -->
+  <div class="text-xs text-gray-400 mt-2 leading-tight">
+    Gross: <%= currency %><%= parseFloat(stat.totalPnl).toLocaleString('en-IN', { minimumFractionDigits: 2 }) %><br>
+    Brokerage: <%= currency %><%= parseFloat(stat.totalBrokerage).toLocaleString('en-IN', { minimumFractionDigits: 2 }) %>
+  </div>
+</div>
+
+
+  <!-- WIN RATE -->
+  <div class="bg-[#1e293b] p-6 rounded-2xl shadow-xl">
+    <div class="flex justify-between items-center">
+      <span class="uppercase text-sm text-gray-400">Win Rate</span>
+      <i class="fas fa-trophy text-green-400 text-xl"></i>
+    </div>
+    <div class="text-3xl font-bold text-green-400 mt-2"><%= stat.winRate %>%</div>
+  </div>
+
+  <!-- TOTAL TRADES -->
+  <div class="bg-[#1e293b] p-6 rounded-2xl shadow-xl">
+    <div class="flex justify-between items-center">
+      <span class="uppercase text-sm text-gray-400">Total Trades</span>
+      <i class="fas fa-tags text-green-400 text-xl"></i>
+    </div>
+    <div class="text-3xl font-bold text-green-400 mt-2"><%= stat.totalTrades %></div>
+  </div>
+
+  <!-- AVG R:R -->
+  <div class="bg-[#1e293b] p-6 rounded-2xl shadow-xl">
+    <div class="flex justify-between items-center">
+      <span class="uppercase text-sm text-gray-400">Avg. R:R</span>
+      <i class="fas fa-balance-scale text-green-400 text-xl"></i>
+    </div>
+    <div class="text-3xl font-bold text-blue-400 mt-2">1:<%= stat.avgRR %></div>
+  </div>
+</div>
+
+<!-- Calendar Grid -->
+<div class="grid grid-cols-7 gap-3 text-sm">
+  <% ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(day => { %>
+    <div class="text-center text-gray-300 font-semibold"><%= day %></div>
+  <% }) %>
+
+  <% calendarCells.forEach(cell => { %>
+    <% if (cell.empty) { %>
+      <div class="h-[80px] bg-[#1c2836] rounded-xl"></div>
+    <% } else {
+      const isToday = new Date().getDate() === cell.day && new Date().getMonth() === parseInt(month);
+      let cellClasses = 'h-[80px] rounded-xl p-2 relative text-left flex flex-col justify-between transition-all ';
+      if (cell.tradeList.length > 0) {
+        cellClasses += cell.totalProfit < 0
+          ? 'bg-red-900/10 border border-red-400 text-red-400'
+          : 'bg-green-900/10 border border-green-400 text-green-400';
+      } else if (isToday) {
+        cellClasses += 'border border-blue-500/50 bg-blue-500/5';
+      } else {
+        cellClasses += 'bg-[#1c2836] text-white';
+      }
+    %>
+   <a href="/trades?date=<%= cell.date %>&market=<%= cell.market %>" class="<%= cellClasses %> hover:cursor-pointer hover:ring-2 hover:ring-blue-400">
+
+      <div class="font-semibold text-sm"><%= cell.day %></div>
+      <% if (cell.tradeList.length > 0) { %>
+        <div class="text-xs font-bold leading-tight mt-1">
+          <!-- Net PnL -->
+          <%= cell.totalProfit < 0 ? '▼ ' : '▲ ' %>
+          <%= currency %><%= Math.abs(cell.totalProfit).toLocaleString('en-IN', { minimumFractionDigits: 2 }) %> (Net)<br>
+        
+          <!-- Brokerage -->
+          <span class="text-[11px] text-gray-400">
+            Brokerage: <%= currency %><%= parseFloat(cell.totalBrokerage).toLocaleString('en-IN', { minimumFractionDigits: 2 }) %>
+          </span><br>
+        
+          <!-- Trades Count -->
+          <%= cell.tradeList.length %> trade<%= cell.tradeList.length > 1 ? 's' : '' %>
+        </div>
+
+      <% } %>
+    </a>
+    <% } %>
+  <% }) %>
+</div>
+
+<!-- Floating Action Button -->
+<button class="fixed bottom-6 right-6 w-12 h-12 bg-blue-500 hover:bg-blue-600 rounded-full text-white text-xl shadow-lg">
+  <i class="fas fa-plus"></i>
+</button>
+
+<%- include('include/footer') %>

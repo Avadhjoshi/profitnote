@@ -1,0 +1,544 @@
+<%- include('../include/header') %>
+<%- include('../include/sidebar') %>
+
+<!-- Shell -->
+<div class="max-w-7xl mx-auto p-6">
+  <div class="bg-[#0b1220] border border-white/10 rounded-2xl shadow-xl overflow-hidden">
+    <!-- Page heading -->
+    <div class="px-6 py-5 bg-gradient-to-r from-indigo-600/10 via-indigo-500/10 to-fuchsia-500/10 border-b border-white/10">
+      <h2 class="text-2xl font-semibold">Add New Trade</h2>
+      <p class="text-white/60 text-sm mt-1">Log your entry, risk and reflection. All fields & logic unchanged.</p>
+    </div>
+
+    <div id="toast-container" class="fixed top-6 right-6 z-50 space-y-4"></div>
+
+    <form id="tradeForm" action="/trades/add" method="POST" enctype="multipart/form-data" class="p-6 space-y-8" novalidate>
+
+      <!-- ========== GENERAL INFO ========== -->
+      <section class="rounded-xl border border-white/10 bg-[#0f172a]">
+        <header class="px-5 py-4 border-b border-white/10 flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-indigo-600/20 grid place-items-center text-indigo-300">
+            <i class="fas fa-info-circle text-xs"></i>
+          </div>
+          <h3 class="text-lg font-semibold">General Info</h3>
+        </header>
+
+        <div class="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- Market Type -->
+          <div>
+            <label class="block text-sm text-white/70 mb-1.5">Market Type *</label>
+            <select name="market_type" id="market_type" required
+              class="form-select w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+              <option value="">Select</option>
+              <% markets.forEach(m => { %>
+                <option value="<%= m.id %>" data-name="<%= m.market_name.toLowerCase() %>"><%= m.market_name %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <!-- Broker -->
+          <div>
+            <label class="block text-sm text-white/70 mb-1.5">Broker *</label>
+            <select name="broker_id" id="broker_id" required
+              class="form-select w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+              <option value="">Select Market First</option>
+            </select>
+          </div>
+
+          <!-- Date -->
+          <div>
+            <label class="block text-sm text-white/70 mb-1.5">Date *</label>
+            <input type="text" name="datetime" id="tradeDate" placeholder="DD/MM/YYYY" required
+              class="form-input w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== TRADE DETAILS ========== -->
+      <section class="rounded-xl border border-white/10 bg-[#0f172a]">
+        <header class="px-5 py-4 border-b border-white/10 flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-blue-600/20 grid place-items-center text-blue-300">
+            <i class="fas fa-chart-line text-xs"></i>
+          </div>
+          <h3 class="text-lg font-semibold">Trade Details</h3>
+        </header>
+
+        <div class="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <!-- Symbol -->
+          <div>
+            <label class="block text-sm text-white/70 mb-1.5">Symbol *</label>
+            <input type="text" name="symbol" required placeholder="RELIANCE, BTCUSDT"
+              class="form-input w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+          </div>
+
+          <!-- Direction (keep the same names/ids/values) -->
+          <div>
+            <label class="block text-sm text-white/70 mb-1.5">Direction *</label>
+            <div class="flex gap-2">
+              <input type="radio" id="long" name="trade_type" value="1" class="hidden peer/long" checked>
+              <label for="long"
+                     class="px-4 py-2 rounded-lg border border-emerald-500/40 text-emerald-300 bg-emerald-500/10 cursor-pointer
+                            peer-checked/long:bg-emerald-600 peer-checked/long:text-white peer-checked/long:border-emerald-600
+                            transition">↑ Long</label>
+
+              <input type="radio" id="short" name="trade_type" value="2" class="hidden peer/short">
+              <label for="short"
+                     class="px-4 py-2 rounded-lg border border-rose-500/40 text-rose-300 bg-rose-500/10 cursor-pointer
+                            peer-checked/short:bg-rose-600 peer-checked/short:text-white peer-checked/short:border-rose-600
+                            transition">↓ Short</label>
+            </div>
+          </div>
+
+          <!-- Entry Price -->
+          <div>
+            <label class="block text-sm text-white/70 mb-1.5">Entry Price (<span class="currencySymbol">₹</span>) *</label>
+            <input type="number" step="0.01" name="entry_price" id="entry_price" required
+              class="form-input w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+          </div>
+
+          <!-- Quantity -->
+          <div>
+            <label class="block text-sm text-white/70 mb-1.5">Quantity *</label>
+            <input type="number" step="0.01" name="entry_quantity" id="entry_quantity" required
+              class="form-input w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+          </div>
+
+          <!-- Leverage (crypto only) -->
+          <div id="leverageWrapper" style="display:none;">
+            <label class="block text-sm text-white/70 mb-1.5">Leverage (x)</label>
+            <input type="number" name="leverage" min="1" max="100" id="leverage"
+              class="form-input w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+          </div>
+
+          <!-- Margin Used (auto) -->
+          <div id="marginUsedWrapper" style="display:none;">
+            <label id="marginLabel" class="block text-sm text-white/70 mb-1.5">Actual Margin Used (<span class="currencySymbol">₹</span>)</label>
+            <input type="text" id="margin_used" name="margin_used" readonly
+              class="form-input w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 opacity-80">
+          </div>
+
+          <!-- Stop Loss -->
+          <div>
+            <label class="block text-sm text-white/70 mb-1.5">Stop Loss</label>
+            <input type="number" name="stop_loss"
+              class="form-input w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+          </div>
+
+          <!-- Target -->
+          <div>
+            <label class="block text-sm text-white/70 mb-1.5">Target</label>
+            <input type="number" name="target"
+              class="form-input w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+          </div>
+
+          <!-- Exit Price -->
+          <div>
+            <label class="block text-sm text-white/70 mb-1.5">Exit Price *</label>
+            <input type="number" step="0.01" name="exit_price" id="exit_price" required
+              class="form-input w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+          </div>
+
+          <!-- Brokerage -->
+          <div>
+            <label class="block text-sm text-white/70 mb-1.5">Brokerage</label>
+            <input type="number" step="0.01" name="brokerage" id="brokerage"
+              class="form-input w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+          </div>
+
+          <!-- P&L Amount (readonly) -->
+          <div>
+            <label class="block text-sm text-white/70 mb-1.5">P&L Amount</label>
+            <input type="number" step="0.01" name="pnl_amount" id="pl_amount" readonly
+              class="form-input w-full bg-emerald-500/5 border border-emerald-500/20 rounded-lg px-3 py-2.5">
+          </div>
+
+          <!-- P&L % (readonly) -->
+          <div>
+            <label class="block text-sm text-white/70 mb-1.5">P&L (%)</label>
+            <input type="number" step="0.01" name="pnl_percent" id="pl_percent" readonly
+              class="form-input w-full bg-emerald-500/5 border border-emerald-500/20 rounded-lg px-3 py-2.5">
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== TRADE REFLECTION ========== -->
+      <section class="rounded-xl border border-white/10 bg-[#0f172a]">
+        <header class="px-5 py-4 border-b border-white/10 flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-sky-600/20 grid place-items-center text-sky-300">
+            <i class="fas fa-clipboard-list text-xs"></i>
+          </div>
+          <h3 class="text-lg font-semibold">Trade Reflection</h3>
+        </header>
+
+        <div class="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- Strategy -->
+          <div>
+            <label class="block text-sm text-white/70 mb-1.5">Strategy *</label>
+            <select name="strategy_id" required
+              class="form-select w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+              <% strategies.forEach(s => { %>
+                <option value="<%= s.id %>"><%= s.name %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <!-- Outcome -->
+          <div>
+            <label class="block text-sm text-white/70 mb-1.5">Outcome Summary *</label>
+            <select name="outcome_summary_id" required
+              class="form-select w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+              <% summaries.forEach(o => { %>
+                <option value="<%= o.id %>"><%= o.label %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <!-- Rationale -->
+          <div class="sm:col-span-2 lg:col-span-3">
+            <label class="block text-sm text-white/70 mb-1.5">Trade Rationale / Analysis</label>
+            <textarea name="rationale" rows="3"
+              class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              placeholder="What did you see before entering? Key levels, confluence, invalidation…"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== EMOTIONS & RULES ========== -->
+      <section class="rounded-xl border border-white/10 bg-[#0f172a]">
+        <header class="px-5 py-4 border-b border-white/10 flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-amber-600/20 grid place-items-center text-amber-300">
+            <i class="fas fa-heartbeat text-xs"></i>
+          </div>
+          <h3 class="text-lg font-semibold">Emotions & Rules</h3>
+        </header>
+
+        <div class="p-5 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Rules -->
+          <div>
+            <label class="block text-sm text-white/70 mb-2">Rules Followed</label>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <% rules.forEach(r => { %>
+                <label class="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2">
+                  <input type="checkbox" name="rules_followed[]" value="<%= r.id %>" class="form-checkbox rounded text-indigo-500 focus:ring-indigo-600">
+                  <span class="text-sm"><%= r.rule_name %></span>
+                </label>
+              <% }) %>
+            </div>
+          </div>
+
+          <!-- Emotion -->
+          <div>
+            <label class="block text-sm text-white/70 mb-2">Emotional State During Trade</label>
+            <select name="emotion_id"
+              class="form-select w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+              <% emotions.forEach(e => { %>
+                <option value="<%= e.id %>"><%= e.label %></option>
+              <% }) %>
+            </select>
+
+            <!-- Sliders -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-5">
+              <div>
+                <label class="block text-sm text-white/70 mb-1.5">Entry Confidence Level (1–10)</label>
+                <input type="range" name="confidence_level" min="1" max="10" value="5" class="w-full accent-indigo-500">
+              </div>
+              <div>
+                <label class="block text-sm text-white/70 mb-1.5">Satisfaction Rating (1–10)</label>
+                <input type="range" name="satisfaction_level" min="1" max="10" value="5" class="w-full accent-indigo-500">
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== MISTAKES & LESSONS ========== -->
+      <section class="rounded-xl border border-white/10 bg-[#0f172a]">
+        <header class="px-5 py-4 border-b border-white/10 flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-rose-600/20 grid place-items-center text-rose-300">
+            <i class="fas fa-triangle-exclamation text-xs"></i>
+          </div>
+          <h3 class="text-lg font-semibold">Mistakes & Lessons</h3>
+        </header>
+
+        <div class="p-5 space-y-5">
+          <!-- Mistakes -->
+          <div>
+            <label class="block text-sm text-white/70 mb-1.5">Mistakes Made</label>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              <% mistakes.forEach(m => { %>
+                <label class="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2">
+                  <input type="checkbox" name="mistakes[]" value="<%= m.id %>" class="form-checkbox rounded text-rose-500 focus:ring-rose-500">
+                  <span class="text-sm"><%= m.name %></span>
+                </label>
+              <% }) %>
+            </div>
+          </div>
+
+          <!-- Lessons -->
+          <div>
+            <label class="block text-sm text-white/70 mb-1.5">Lessons Learned</label>
+            <textarea name="lessons" rows="3"
+              class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              placeholder="What will you change next time?"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== SCREENSHOT UPLOAD ========== -->
+      <section class="rounded-xl border border-white/10 bg-[#0f172a]" x-data="imageUploader()">
+        <header class="px-5 py-4 border-b border-white/10 flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-teal-600/20 grid place-items-center text-teal-300">
+            <i class="fas fa-image text-xs"></i>
+          </div>
+          <h3 class="text-lg font-semibold">Upload Screenshots</h3>
+        </header>
+
+        <div class="p-5">
+          <label class="block text-sm text-white/70 mb-2">Drag &amp; Drop Images</label>
+
+          <div @dragover.prevent @drop.prevent="handleDrop($event)" @click="$refs.input.click()"
+               class="w-full h-36 grid place-items-center text-white/60 bg-white/5 border border-dashed border-white/20 rounded-xl cursor-pointer hover:bg-white/7 transition">
+            <span>Drag &amp; Drop here or Click to browse</span>
+            <input type="file" x-ref="input" name="screenshots[]" multiple @change="handleFileSelect" accept="image/*" hidden>
+          </div>
+
+          <div class="mt-4 flex flex-wrap gap-3" id="preview-container">
+            <template x-for="(file, index) in files" :key="index">
+              <div class="relative w-24 h-24">
+                <img :src="file.preview" class="w-24 h-24 object-cover rounded-lg border border-white/10 shadow">
+                <button type="button" @click="removeFile(index)"
+                        class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-rose-600 text-white grid place-items-center text-xs shadow">
+                  &times;
+                </button>
+              </div>
+            </template>
+          </div>
+        </div>
+      </section>
+
+      <!-- Actions -->
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="reset" class="bg-white/10 hover:bg-white/15 border border-white/10 text-white px-5 py-2.5 rounded-lg">
+          Reset
+        </button>
+        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg">
+          Save Trade
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function imageUploader() {
+  return {
+    files: [],
+    handleFileSelect(event) {
+      const selectedFiles = event.target.files;
+      this.addFiles(selectedFiles);
+    },
+    handleDrop(event) {
+      const droppedFiles = event.dataTransfer.files;
+      this.addFiles(droppedFiles);
+    },
+    addFiles(fileList) {
+      for (let i = 0; i < fileList.length; i++) {
+        const file = fileList[i];
+        if (file.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            this.files.push({ file, preview: e.target.result });
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    },
+    removeFile(index) {
+      this.files.splice(index, 1);
+    }
+  }
+}
+  document.addEventListener("DOMContentLoaded", () => {
+    flatpickr("#tradeDate", {
+      dateFormat: "d/m/Y",
+      defaultDate: new Date()
+    });
+
+    const marketTypeSelect = document.getElementById('market_type');
+    const leverageWrapper = document.getElementById('leverageWrapper');
+    const marginUsedWrapper = document.getElementById('marginUsedWrapper');
+    const leverageInput = document.getElementById('leverage');
+    const entryPriceInput = document.getElementById('entry_price');
+    const qtyInput = document.getElementById('entry_quantity');
+    const marginUsedInput = document.getElementById('margin_used');
+
+    function updateLeverageVisibility() {
+      const selected = marketTypeSelect.options[marketTypeSelect.selectedIndex];
+      const isCrypto = selected?.dataset?.name?.toLowerCase() === 'crypto';
+
+      leverageWrapper.style.display = isCrypto ? 'block' : 'none';
+      marginUsedWrapper.style.display = isCrypto ? 'block' : 'none';
+
+      const symbols = document.getElementsByClassName('currencySymbol');
+      for (let i = 0; i < symbols.length; i++) {
+        symbols[i].innerText = isCrypto ? '$' : '₹';
+      }
+
+      if (!isCrypto) {
+        leverageInput.value = '';
+        marginUsedInput.value = '';
+      }
+    }
+
+    function calculateMarginUsed() {
+      const entry = parseFloat(entryPriceInput.value);
+      const qty = parseFloat(qtyInput.value);
+      const lev = parseFloat(leverageInput.value);
+      if (!isNaN(entry) && !isNaN(qty) && !isNaN(lev) && lev > 0) {
+        const margin = (entry * qty / lev).toFixed(2);
+        marginUsedInput.value = margin;
+      } else {
+        marginUsedInput.value = '';
+      }
+    }
+
+    // Attach margin listeners
+    if (leverageInput) leverageInput.addEventListener('input', calculateMarginUsed);
+    if (entryPriceInput) entryPriceInput.addEventListener('input', calculateMarginUsed);
+    if (qtyInput) qtyInput.addEventListener('input', calculateMarginUsed);
+    if (marketTypeSelect) {
+      marketTypeSelect.addEventListener('change', () => {
+        updateLeverageVisibility();
+        calculateMarginUsed();
+      });
+    }
+
+    updateLeverageVisibility();
+    calculateMarginUsed();
+
+    // Dynamic broker fetching
+    marketTypeSelect.addEventListener('change', async function () {
+      const selected = this.options[this.selectedIndex];
+      const isCrypto = selected.text.toLowerCase().includes('crypto');
+      document.getElementById('leverageWrapper').style.display = isCrypto ? 'block' : 'none';
+
+      const res = await fetch(`/trades/get-brokers?market_type=${this.value}`);
+      const brokers = await res.json();
+      const brokerSelect = document.getElementById('broker_id');
+      brokerSelect.innerHTML = '<option value="">Select Broker</option>';
+      brokers.forEach(b => {
+        brokerSelect.innerHTML += `<option value="${b.id}">${b.name}</option>`;
+      });
+    });
+
+  function calculatePnL() {
+  const entry = parseFloat(document.getElementById('entry_price').value);
+  const qty = parseFloat(document.getElementById('entry_quantity').value);
+  const exit = parseFloat(document.getElementById('exit_price').value);
+  const tradeType = document.querySelector('input[name="trade_type"]:checked')?.value; // "1" = long, "2" = short
+
+  if (!isNaN(entry) && !isNaN(qty) && !isNaN(exit) && tradeType) {
+    let pnl, pnlPercent;
+
+    if (tradeType === "1") { // Long
+      pnl = (exit - entry) * qty;
+      pnlPercent = ((exit - entry) / entry) * 100;
+    } else { // Short
+      pnl = (entry - exit) * qty;
+      pnlPercent = ((entry - exit) / entry) * 100;
+    }
+
+    document.getElementById('pl_amount').value = pnl.toFixed(2);
+    document.getElementById('pl_percent').value = pnlPercent.toFixed(2);
+  }
+}
+
+    ['entry_price', 'entry_quantity', 'exit_price'].forEach(id => {
+      document.getElementById(id).addEventListener('input', calculatePnL);
+    });
+
+    // Form submission
+    const form = document.getElementById('tradeForm');
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const requiredFields = [
+        { name: 'market_type', label: 'Market Type' },
+        { name: 'broker_id', label: 'Broker' },
+        { name: 'datetime', label: 'Date' },
+        { name: 'symbol', label: 'Symbol' },
+        { name: 'entry_price', label: 'Entry Price' },
+        { name: 'entry_quantity', label: 'Quantity' },
+        { name: 'exit_price', label: 'Exit Price' },
+        { name: 'strategy_id', label: 'Strategy' },
+        { name: 'outcome_summary_id', label: 'Outcome Summary' }
+      ];
+
+      for (const field of requiredFields) {
+        const el = form.elements[field.name];
+        if (!el || !el.value) {
+          Toastify({
+            text: `⚠️ Please fill in ${field.label}`,
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "#f97316"
+          }).showToast();
+          el?.focus();
+          return;
+        }
+      }
+
+      const formData = new FormData(form);
+
+      // Append screenshots from Alpine uploader
+      const uploader = document.querySelector('[x-data="imageUploader()"]')?.__x?.data;
+      if (uploader && uploader.files?.length > 0) {
+        uploader.files.forEach(f => {
+          formData.append('screenshots[]', f.file);
+        });
+      }
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      try {
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Saving...';
+        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+        const res = await fetch('/trades/add', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          Toastify({
+            text: "✅ " + data.message,
+            duration: 4000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "#22c55e"
+          }).showToast();
+          form.reset();
+          document.querySelector("#preview-container").innerHTML = "";
+          setTimeout(() => location.reload(), 2000);
+        } else {
+          throw new Error(data.message);
+        }
+      } catch (err) {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Save Trade';
+        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        Toastify({
+          text: "❌ " + err.message,
+          duration: 4000,
+          gravity: "top",
+          position: "right",
+          backgroundColor: "#ef4444"
+        }).showToast();
+      }
+    });
+  });
+</script>
+
+<%- include('../include/footer') %>

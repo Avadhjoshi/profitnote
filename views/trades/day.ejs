@@ -1,0 +1,39 @@
+<%- include('../include/header') %>
+<%- include('../include/sidebar') %>
+
+<div class="bg-[#1e293b] p-6 rounded-xl mt-6 shadow-xl">
+  <h2 class="text-xl text-gray-200 font-bold mb-4">Trades on <%= date %></h2>
+
+  <% if (trades.length === 0) { %>
+    <p class="text-gray-400 italic">No trades on this day.</p>
+  <% } else { %>
+    <table class="w-full text-sm text-left text-gray-400">
+      <thead class="text-xs uppercase text-gray-300 bg-[#0f172a]">
+        <tr>
+          <th class="px-4 py-2">#</th>
+          <th class="px-4 py-2">Symbol</th>
+          <th class="px-4 py-2">P&L</th>
+          <th class="px-4 py-2">Entry</th>
+          <th class="px-4 py-2">Exit</th>
+          <th class="px-4 py-2">Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% trades.forEach((t, i) => { %>
+          <tr class="border-b border-gray-700">
+            <td class="px-4 py-2"><%= i + 1 %></td>
+            <td class="px-4 py-2 uppercase"><%= t.symbol %></td>
+            <td class="px-4 py-2 font-semibold <%= t.pnl_amount >= 0 ? 'text-green-400' : 'text-red-400' %>">
+              <%= t.pnl_amount %>
+            </td>
+            <td class="px-4 py-2"><%= t.entry_price %></td>
+            <td class="px-4 py-2"><%= t.exit_price || '-' %></td>
+            <td class="px-4 py-2"><%= moment(t.datetime).format('HH:mm:ss') %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</div>
+
+<%- include('../include/footer') %>

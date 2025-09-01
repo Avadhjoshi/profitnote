@@ -1,0 +1,601 @@
+<%- include('include/header') %>
+<%- include('include/sidebar') %>
+
+<!-- ====== Page Shell ====== -->
+<div class="pb-10">
+
+  <!-- ====== Sticky Filter Bar ====== -->
+  <div class="sticky top-0 z-30 backdrop-blur bg-black/30 border-b border-white/10">
+    <div class="px-4 md:px-6 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <h1 class="text-xl md:text-2xl font-semibold tracking-tight">Dashboard</h1>
+
+      <form method="GET" class="flex flex-wrap gap-2 items-center">
+        <!-- Market -->
+        <select name="market" onchange="this.form.submit()"
+          class="bg-[#0b1220] text-white border border-white/10 text-sm px-3 py-2 rounded-lg hover:border-indigo-500/50 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+          <% marketList.forEach(m => { %>
+            <option value="<%= m.id %>" <%= market == m.id ? 'selected' : '' %>><%= m.market_name %></option>
+          <% }) %>
+        </select>
+
+        <!-- Month -->
+        <select name="month" onchange="this.form.submit()"
+          class="bg-[#0b1220] text-white border border-white/10 text-sm px-3 py-2 rounded-lg hover:border-indigo-500/50 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+          <% for (let m = 0; m < 12; m++) { %>
+            <option value="<%= m %>" <%= m == month ? 'selected' : '' %>>
+              <%= new Date(2000, m).toLocaleString('default', { month: 'long' }) %>
+            </option>
+          <% } %>
+        </select>
+
+        <!-- Year -->
+        <select name="year" onchange="this.form.submit()"
+          class="bg-[#0b1220] text-white border border-white/10 text-sm px-3 py-2 rounded-lg hover:border-indigo-500/50 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+          <% for (let y = 2024; y <= 2030; y++) { %>
+            <option value="<%= y %>" <%= y == year ? 'selected' : '' %>><%= y %></option>
+          <% } %>
+        </select>
+      </form>
+    </div>
+  </div>
+
+  <!-- ====== AI Trade Coach Trigger Card ====== -->
+  <div x-data="aiCoach()" class="px-4 md:px-6 pt-6">
+    <div
+      @click="open()"
+      class="group relative overflow-hidden rounded-2xl p-5 md:p-6 cursor-pointer 
+             bg-gradient-to-r from-indigo-600 via-purple-600 to-fuchsia-600 shadow-lg 
+             hover:shadow-2xl transition-all hover:scale-[1.01] active:scale-[.99]"
+      role="button" tabindex="0"
+    >
+      <div class="pointer-events-none absolute -top-12 -right-12 w-44 h-44 bg-white/15 blur-3xl rounded-full"></div>
+
+      <div class="relative z-10 flex flex-col md:flex-row md:items-center gap-4">
+        <div class="text-4xl leading-none">🤖</div>
+        <div class="flex-1">
+          <div class="uppercase tracking-wider text-white/80 text-xs">AI Trade Coach</div>
+          <div class="text-white text-xl md:text-2xl font-bold">Thinking to place an order?</div>
+          <div class="text-white/90 text-sm md:text-base">Ask AI about the current market scenario <span class="opacity-90">before you trade</span>.</div>
+        </div>
+        <button
+          @click.stop="open()"
+          class="w-full md:w-auto px-4 py-2 rounded-xl bg-white text-indigo-700 font-semibold shadow 
+                 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70">
+          Ask AI Now ✨
+        </button>
+      </div>
+    </div>
+
+    <!-- ====== AI Coach Modal (same logic, refined shell) ====== -->
+    <div
+      x-show="show"
+      x-transition.opacity
+      class="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4"
+      style="display:none; overflow-y:auto;"
+    >
+      <div x-show="show" x-transition
+           class="w-full max-w-xl bg-[#0f172a] text-white rounded-2xl shadow-2xl border border-white/10 flex flex-col relative my-10">
+        <div x-show="toast" x-transition
+             class="absolute top-3 right-3 bg-emerald-600/90 text-white text-sm px-3 py-2 rounded-lg shadow">
+          ✅ AI analysis ready
+        </div>
+
+        <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+          <div class="text-lg font-semibold">Ask AI Before You Trade</div>
+          <button @click="close()" class="text-white/70 hover:text-white text-xl leading-none">×</button>
+        </div>
+
+        <div class="px-6 py-5 space-y-4 overflow-y-auto flex-1 min-h-0">
+          <div>
+            <label class="block text-sm text-white/70 mb-1">Symbol</label>
+            <input x-model.trim="form.symbol" placeholder="e.g., BTCUSDT, NIFTY, ETHUSDT, TCS"
+                   class="w-full bg-[#111827] border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-600" />
+          </div>
+
+          <div>
+            <label class="block text-gray-300 mb-1">Market Type</label>
+            <select x-model="form.market"
+                    class="w-full bg-[#111827] border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+              <option value="">Auto Detect</option>
+              <option value="crypto">Crypto</option>
+              <option value="indian">Indian (NSE/BSE)</option>
+              <option value="forex">Forex</option>
+              <option value="us">US Stocks</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm text-white/70 mb-2">Bias</label>
+            <div class="flex gap-3">
+              <button type="button"
+                      :class="form.side==='LONG' ? 'bg-green-600 text-white' : 'bg-[#111827] text-white/80 hover:bg-[#1f2937]'"
+                      class="px-4 py-2 rounded-xl border border-white/10"
+                      @click="form.side='LONG'">🟢 Long</button>
+              <button type="button"
+                      :class="form.side==='SHORT' ? 'bg-red-600 text-white' : 'bg-[#111827] text-white/80 hover:bg-[#1f2937]'"
+                      class="px-4 py-2 rounded-xl border border-white/10"
+                      @click="form.side='SHORT'">🔴 Short</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm text-white/70 mb-1">Holding Duration</label>
+            <select x-model="form.duration"
+                    class="w-full bg-[#111827] border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+              <option value="intraday">Intraday (0–1 day)</option>
+              <option value="1-2 days">1–2 days</option>
+              <option value="1 week">Up to 1 week</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm text-white/70 mb-1">Primary Timeframe (optional)</label>
+            <input x-model.trim="form.timeframe" placeholder="e.g., 15m, 1h, 4h, 1D"
+                   class="w-full bg-[#111827] border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-600" />
+          </div>
+
+          <template x-if="error">
+            <div class="text-red-400 text-sm" x-text="error"></div>
+          </template>
+
+          <div x-show="loading" x-transition class="w-full">
+            <div class="h-2 w-full bg-white/10 rounded overflow-hidden">
+              <div class="h-2 w-1/3 bg-indigo-500 animate-pulse"></div>
+            </div>
+            <div class="text-xs text-white/60 mt-2">AI is analyzing…</div>
+          </div>
+
+          <div x-ref="resultBox"
+               :class="resultHtml ? 'ring-2 ring-indigo-500/60' : ''"
+               class="bg-[#0b1220] border border-white/10 rounded-xl p-4 max-h-72 overflow-y-auto transition ring-0">
+            <template x-if="!resultHtml && !loading">
+              <div class="text-white/40 text-sm">Result will appear here.</div>
+            </template>
+            <div class="text-sm break-words" x-html="resultHtml"></div>
+          </div>
+        </div>
+
+        <div class="px-4 sm:px-6 py-4 border-t border-white/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div class="text-white/60 text-xs sm:text-sm">⚠️ AI is advisory only. Manage your risk.</div>
+          <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <button @click="close()" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-[#111827] hover:bg-[#1f2937] border border-white/10">Cancel</button>
+            <button @click="askAI()" :disabled="loading"
+                    class="w-full sm:w-auto px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed">
+              <span x-show="!loading" class="whitespace-nowrap">Ask AI Now ✨</span>
+              <span x-show="loading" class="inline-flex items-center gap-2 justify-center">
+                <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"></circle>
+                  <path d="M4 12a8 8 0 018-8" stroke="currentColor" stroke-width="4" class="opacity-75"></path>
+                </svg>
+                Thinking…
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Coach Helpers -->
+    <style>
+      .analysis-card { background:#0f172a;color:#e2e8f0;border-radius:12px;padding:18px;line-height:1.5;max-width:600px }
+      .analysis-card strong{ color:#93c5fd }
+      .analysis-card table{ width:100%;border-collapse:collapse;margin-top:8px }
+      .analysis-card table th,.analysis-card table td{ border:1px solid #334155;padding:6px 8px }
+      .analysis-card table th{ background:#1e293b;font-weight:600 }
+      .verdict-yes{ color:#4ade80;font-weight:700 }
+      .verdict-no{ color:#f87171;font-weight:700 }
+    </style>
+    <script>
+      function aiCoach() {
+        return {
+          show:false, loading:false, error:'', toast:false, result:'', resultHtml:'',
+          form:{ symbol:'', side:'LONG', duration:'1-2 days', timeframe:'', market:'' },
+          open(){ this.show=true; this.error=''; this.result=''; this.resultHtml=''; this.toast=false },
+          close(){ if(!this.loading){ this.show=false } },
+          async askAI(){
+            this.error=''; this.result=''; this.resultHtml=''; this.toast=false; if(!this.form.symbol){ this.error='Please enter a symbol.'; return; }
+            this.loading=true;
+            try{
+              const res = await fetch('/ai/trade-check',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(this.form) });
+              const raw = await res.text(); let data;
+              try{ data = raw ? JSON.parse(raw) : {} }catch{ throw new Error(`Server returned non-JSON (${res.status}): ${raw.slice(0,200)}`) }
+              if(!res.ok) throw new Error(data?.error || `Request failed (${res.status})`);
+              this.result = data.verdict || 'No response.';
+              const html = formatAnalysis(this.result);
+              this.resultHtml = `<div class="analysis-card">${window.marked ? marked.parse(html) : html}</div>`;
+              this.$nextTick(()=>{ this.$refs.resultBox?.scrollIntoView({behavior:'smooth', block:'center'}); this.toast=true; setTimeout(()=>this.toast=false,2000); setTimeout(()=>{ this.$refs.resultBox?.classList.remove('ring-2','ring-indigo-500/60') },2200) })
+            }catch(e){ this.error = e.message || 'Something went wrong.' } finally{ this.loading=false }
+          }
+        }
+      }
+      function formatAnalysis(text){
+        text = text.replace(/(Verdict:\s*)(YES|NO)/i,(m,l,v)=> `${l}<span class="${v.toUpperCase()==='YES'?'verdict-yes':'verdict-no'}">${v}</span>`);
+        text = text.replace(/Key Levels:\n([\s\S]*?)\n\n/,(m,levels)=>{
+          const rows = levels.trim().split('\n').map(line=>{
+            const [label,value] = line.replace('-','').split(':').map(s=>s.trim()); return `| ${label} | ${value} |`;
+          });
+          return `Key Levels:\n\n| Level | Value |\n|-------|-------|\n${rows.join('\n')}\n\n`;
+        });
+        return text;
+      }
+    </script>
+  </div>
+
+  <!-- ====== KPI Grid ====== -->
+  <div class="px-4 md:px-6 mt-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+    <!-- Today P&L -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-5 hover:border-indigo-500/40 transition group">
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-300">Today's P&L</span>
+        <span class="text-xs text-white/60">vs yesterday</span>
+      </div>
+      <div class="mt-2 text-2xl font-bold <%= current.todayPnl >= 0 ? 'text-green-400' : 'text-red-400' %>">
+        <%= currency %><%= current.todayPnl.toFixed(2) %>
+      </div>
+      <div class="text-xs text-gray-400 mt-1">
+        <% if (current.yesterdayPnl !== 0) { %>
+          <%= (((current.todayPnl - current.yesterdayPnl) / Math.abs(current.yesterdayPnl)) * 100).toFixed(0) %>% vs yesterday
+        <% } else { %>No trades yesterday<% } %>
+      </div>
+    </div>
+
+    <!-- Highest P&L -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-5 hover:border-green-500/30 transition">
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-300">Highest P&L</span>
+        <i class="fa-solid fa-arrow-trend-up text-green-400/90"></i>
+      </div>
+      <div class="mt-2 text-2xl font-bold text-green-400"><%= currency %><%= current.highestPnl %></div>
+      <div class="text-xs text-gray-400 mt-1">
+        <%= previous.highestPnl > 0 ? (((current.highestPnl - previous.highestPnl) / previous.highestPnl) * 100).toFixed(0) + '% vs last month' : 'No data last month' %>
+      </div>
+    </div>
+
+    <!-- Highest Loss -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-5 hover:border-red-500/30 transition">
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-300">Highest Loss</span>
+        <i class="fa-solid fa-arrow-trend-down text-red-400/90"></i>
+      </div>
+      <div class="mt-2 text-2xl font-bold text-red-500"><%= currency %><%= current.lowestPnl %></div>
+      <div class="text-xs text-gray-400 mt-1">
+        <%= previous.lowestPnl < 0 ? ((Math.abs(current.lowestPnl) - Math.abs(previous.lowestPnl)).toFixed(0)) + ' vs last month' : 'No data last month' %>
+      </div>
+    </div>
+
+    <!-- Win Rate -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-5 hover:border-blue-500/30 transition">
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-300">Win Rate</span>
+        <i class="fa-solid fa-bullseye text-blue-400/90"></i>
+      </div>
+      <div class="mt-2 text-2xl font-bold text-blue-400"><%= current.winRate %>%</div>
+      <div class="text-xs text-gray-400 mt-1">
+        <%= previous.winRate > 0 ? ((current.winRate - previous.winRate).toFixed(0)) + '% vs last month' : 'No data last month' %>
+      </div>
+    </div>
+
+    <!-- Avg R:R -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-5 hover:border-purple-500/30 transition">
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-300">Avg. Risk/Reward</span>
+        <i class="fa-solid fa-scale-balanced text-purple-400/90"></i>
+      </div>
+      <div class="mt-2 text-2xl font-bold text-purple-400"><%= current.avgRR %>R</div>
+      <div class="text-xs text-gray-400 mt-1">
+        <%= previous.avgRR > 0 ? (current.avgRR - previous.avgRR).toFixed(2) + 'R vs last month' : 'No data last month' %>
+      </div>
+    </div>
+
+    <!-- Trades This Month -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-5 hover:border-orange-500/30 transition">
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-300">Trades This Month</span>
+        <i class="fa-solid fa-rectangle-list text-orange-400/90"></i>
+      </div>
+      <div class="mt-2 text-2xl font-bold text-orange-400"><%= current.tradeCount %></div>
+      <div class="text-xs text-gray-400 mt-1">
+        <%= previous.tradeCount > 0 ? (current.tradeCount - previous.tradeCount) + ' vs last month' : 'No data last month' %>
+      </div>
+    </div>
+
+    <!-- Total P&L -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-5 hover:border-emerald-500/30 transition">
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-300">Total P&L</span>
+        <i class="fa-solid fa-sack-dollar text-emerald-400/90"></i>
+      </div>
+      <div class="mt-2 text-2xl font-bold <%= parseFloat(current.totalPnl) >= 0 ? 'text-green-500' : 'text-red-500' %>">
+        <%= currency %><%= current.totalPnl %>
+      </div>
+      <div class="text-xs text-gray-400 mt-1">
+        <%= previous.totalPnl > 0 ? (((current.totalPnl - previous.totalPnl) / previous.totalPnl) * 100).toFixed(0) + '% vs last month' : 'No data last month' %>
+      </div>
+    </div>
+
+    <!-- Most Traded Symbol -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-5 hover:border-pink-500/30 transition">
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-300">Most Traded Symbol</span>
+        <i class="fa-solid fa-hashtag text-pink-400/90"></i>
+      </div>
+      <div class="mt-2 text-2xl font-bold text-pink-400 uppercase"><%= current.topSymbol %></div>
+      <div class="text-xs text-gray-400 mt-1">Symbol with highest frequency</div>
+    </div>
+
+    <!-- Rules Followed -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-5 hover:border-emerald-500/30 transition">
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-300">Rules Followed</span>
+        <i class="fa-solid fa-clipboard-check text-emerald-400/90"></i>
+      </div>
+      <div class="mt-2 text-2xl font-bold text-emerald-400"><%= ruleCompliance %>%</div>
+      <div class="text-xs text-gray-400 mt-1">Compliance This Month</div>
+    </div>
+
+    <!-- Confidence Index -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-5 hover:border-yellow-400/30 transition">
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-300">Confidence Index</span>
+        <i class="fa-solid fa-gauge-high text-yellow-300/90"></i>
+      </div>
+      <div class="mt-2 text-2xl font-bold <%= confidenceIndex === 'High' ? 'text-green-400' : confidenceIndex === 'Medium' ? 'text-yellow-300' : 'text-red-400' %>">
+        <%= confidenceIndex %>
+      </div>
+      <div class="text-xs text-gray-400 mt-1">Based on Win Rate</div>
+    </div>
+  </div>
+
+  <!-- ====== Market Widgets (Adaptive by Market) ====== -->
+  <div class="px-4 md:px-6 mt-8">
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-4 md:p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold">Market Widgets</h2>
+        <div class="text-xs text-white/60">Powered by TradingView</div>
+      </div>
+
+      <!-- Ticker tape -->
+      <div class="tradingview-widget-container mb-4">
+        <div class="tradingview-widget-container__widget"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+        {
+          "symbols": [
+            {"proName":"BITSTAMP:BTCUSD","title":"Bitcoin"},
+            {"proName":"BITSTAMP:ETHUSD","title":"Ethereum"},
+            {"proName":"BSE:SENSEX","title":""}
+          ],
+          "colorTheme":"dark","locale":"en","isTransparent":false,"showSymbolLogo":true,"displayMode":"adaptive"
+        }
+        </script>
+      </div>
+
+      <% if (market == 1) { %>
+        <!-- India Heatmap -->
+        <div class="tradingview-widget-container">
+          <div class="tradingview-widget-container__widget"></div>
+          <div class="tradingview-widget-copyright">
+            <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Stock heatmap by TradingView</span></a>
+          </div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>
+          { "dataSource":"SENSEX","blockSize":"market_cap_basic","blockColor":"change","grouping":"no_group","locale":"en",
+            "colorTheme":"dark","hasTopBar":true,"isDataSetEnabled":true,"isZoomEnabled":false,
+            "hasSymbolTooltip":true,"isMonoSize":false,"width":"100%","height":"500" }
+          </script>
+        </div>
+      <% } else if (market == 2) { %>
+        <!-- Crypto Heatmap -->
+        <div class="tradingview-widget-container">
+          <div class="tradingview-widget-container__widget"></div>
+          <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/markets/cryptocurrencies/" rel="noopener nofollow" target="_blank"><span class="blue-text">Crypto coins heatmap by TradingView</span></a></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-crypto-coins-heatmap.js" async>
+          { "dataSource":"Crypto","blockSize":"market_cap_calc","blockColor":"24h_close_change|5","locale":"en",
+            "colorTheme":"dark","hasTopBar":false,"isDataSetEnabled":false,"isZoomEnabled":false,
+            "hasSymbolTooltip":true,"isMonoSize":false,"width":"100%","height":"500" }
+          </script>
+        </div>
+      <% } else if (market == 3) { %>
+        <!-- Forex Cross Rates -->
+        <div class="tradingview-widget-container">
+          <div class="tradingview-widget-container__widget"></div>
+          <div class="tradingview-widget-copyright">
+            <a href="https://www.tradingview.com/markets/currencies/cross-rates-overview-prices/" rel="noopener nofollow" target="_blank"><span class="blue-text">Forex market by TradingView</span></a>
+          </div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-forex-cross-rates.js" async>
+          {
+            "colorTheme":"dark","isTransparent":false,"locale":"en",
+            "currencies":["EUR","USD","JPY","GBP","CHF","AUD","CAD","NZD","CNY"],
+            "backgroundColor":"#0F0F0F","width":"100%","height":400
+          }
+          </script>
+        </div>
+      <% } %>
+
+      <!-- BTC & ETH mini charts -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div class="bg-[#0f172a] border border-white/10 rounded-xl p-3">
+          <div class="text-sm text-white mb-2">BTC/USDT Live</div>
+          <iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_btc&symbol=BINANCE:BTCUSDT&interval=30&hidesidetoolbar=1&symboledit=1&saveimage=1&toolbarbg=F1F3F6&studies=[]&theme=dark&style=1&timezone=Etc%2FUTC&withdateranges=1&hideideas=1&hidevolume=1&referral_id=26533"
+                  width="100%" height="300" frameborder="0" allowtransparency="true" scrolling="no"></iframe>
+        </div>
+        <div class="bg-[#0f172a] border border-white/10 rounded-xl p-3">
+          <div class="text-sm text-white mb-2">ETH/USDT Live</div>
+          <iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_eth&symbol=BINANCE:ETHUSDT&interval=30&hidesidetoolbar=1&symboledit=1&saveimage=1&toolbarbg=F1F3F6&studies=[]&theme=dark&style=1&timezone=Etc%2FUTC&withdateranges=1&hideideas=1&hidevolume=1&referral_id=26533"
+                  width="100%" height="300" frameborder="0" allowtransparency="true" scrolling="no"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Smart Signals ====== -->
+  <div class="px-4 md:px-6 mt-8">
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-5 shadow-xl">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold">📚 Smart Signals</h2>
+        <span class="text-xs text-white/60"><%= activeSignals.length %> active</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <% activeSignals.forEach(sig => { %>
+          <div class="bg-[#0f172a] border border-white/10 rounded-xl p-5 hover:shadow-xl transition-all duration-300">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-white text-base font-semibold"><%= sig.symbol %></span>
+              <span class="text-xs font-bold px-2 py-1 rounded-full <%= sig.side == 'buy' ? 'bg-green-600 text-white' : 'bg-red-600 text-white' %>">
+                <%= sig.side == 'buy' ? 'Long' : 'Short' %>
+              </span>
+            </div>
+            <div class="text-sm text-gray-300 space-y-1">
+              <div><span class="font-medium text-gray-400">💰 Entry:</span> ₹<%= parseFloat(sig.entry_price).toFixed(2) %></div>
+              <div><span class="font-medium text-gray-400">🛡️ Stop Loss:</span> ₹<%= parseFloat(sig.sl).toFixed(2) %></div>
+              <div><span class="font-medium text-gray-400">🎯 Target:</span> ₹<%= parseFloat(sig.tp2).toFixed(2) %></div>
+            </div>
+            <div class="mt-3 text-xs text-gray-400 italic">
+              Added on <%= moment(sig.added_on).format('DD MMM, h:mm A') %>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Charts Row ====== -->
+  <div class="px-4 md:px-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-8">
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-6">
+      <h3 class="text-lg font-semibold mb-4 text-center">Win/Loss Distribution</h3>
+      <canvas id="winLossChart" height="150"></canvas>
+    </div>
+
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-6">
+      <h3 class="text-lg font-semibold mb-4 text-center">Daily P&L</h3>
+      <canvas id="dailyPnlChart" height="150"></canvas>
+    </div>
+
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-6">
+      <h3 class="text-lg font-semibold mb-4 text-center">Most Common Mistakes</h3>
+      <canvas id="mistakesChart" height="150"></canvas>
+    </div>
+  </div>
+
+  <!-- ====== Strategy Matrix ====== -->
+  <div class="px-4 md:px-6 mt-8">
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-6">
+      <h3 class="text-lg font-semibold mb-4">Strategy Matrix</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <% strategies.forEach(strategy => { %>
+          <div class="bg-[#0f172a] border border-white/10 p-4 rounded-xl">
+            <div class="text-sm text-gray-300"><%= strategy.name %></div>
+            <div class="text-lg font-bold <%= parseFloat(strategy.pnl) >= 0 ? 'text-green-400' : 'text-red-400' %>">
+              <%= currency %><%= strategy.pnl %>
+            </div>
+            <div class="text-xs text-gray-400 mt-1">Win Rate: <%= strategy.winRate %>% | Trades: <%= strategy.count %></div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Monthly Trend ====== -->
+  <div class="px-4 md:px-6 mt-8">
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-6">
+      <h3 class="text-lg font-semibold mb-4">Monthly P&L Trend</h3>
+      <canvas id="monthlyPnlChart" height="100"></canvas>
+    </div>
+  </div>
+ <div class="px-4 md:px-6 mt-8">
+      <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-6">
+   
+        <h3 class="text-lg font-semibold mb-4">Recent Activity</h3>
+        <ul class="divide-y divide-white/10 text-sm">
+          <li class="py-3 flex justify-between">
+            <span>Bought 10 shares of INFY</span>
+            <span class="text-emerald-400">+ ₹2,500</span>
+          </li>
+          <li class="py-3 flex justify-between">
+            <span>Sold 5 shares of TCS</span>
+            <span class="text-rose-400">- ₹1,200</span>
+          </li>
+          <li class="py-3 flex justify-between">
+            <span>Added new Strategy “Momentum Swing”</span>
+            <span class="text-white/60">Today</span>
+          </li>
+        </ul>
+</div>
+</div>
+</div>
+
+<!-- ====== Charts ====== -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Shared dark options
+  const darkScales = {
+    x: { ticks:{ color:'#cbd5e1' }, grid:{ color:'rgba(255,255,255,0.06)'} },
+    y: { ticks:{ color:'#cbd5e1' }, grid:{ color:'rgba(255,255,255,0.06)'}, beginAtZero:true }
+  };
+  const darkPlugins = {
+    legend: { labels: { color:'#e5e7eb' } },
+    tooltip: { titleColor:'#0b1220', bodyColor:'#0b1220', backgroundColor:'#e5e7eb' }
+  };
+
+  // Monthly P&L (line/area)
+  const monthlyPnlCtx = document.getElementById('monthlyPnlChart').getContext('2d');
+  new Chart(monthlyPnlCtx, {
+    type: 'line',
+    data: {
+      labels: <%- JSON.stringify(monthlyPnlData.map(d => d.month)) %>,
+      datasets: [{
+        label: 'P&L',
+        data: <%- JSON.stringify(monthlyPnlData.map(d => d.pnl)) %>,
+        borderColor: 'rgb(99, 102, 241)', /* indigo-500 */
+        backgroundColor: 'rgba(99, 102, 241, 0.18)',
+        fill: true, tension: 0.35, pointRadius: 2, pointHoverRadius: 4
+      }]
+    },
+    options: { responsive: true, scales: darkScales, plugins: darkPlugins }
+  });
+
+  // Win/Loss (pie)
+  const winLossCtx = document.getElementById('winLossChart').getContext('2d');
+  new Chart(winLossCtx, {
+    type: 'pie',
+    data: {
+      labels: ['Win', 'Loss'],
+      datasets: [{
+        data: [<%= winLossData.win %>, <%= winLossData.loss %>],
+        backgroundColor: ['#22c55e', '#ef4444'], borderColor:'#0b1220', borderWidth:2
+      }]
+    },
+    options: { plugins: darkPlugins }
+  });
+
+  // Daily P&L (bar)
+  const dailyPnlCtx = document.getElementById('dailyPnlChart').getContext('2d');
+  new Chart(dailyPnlCtx, {
+    type: 'bar',
+    data: {
+      labels: <%- JSON.stringify(dailyPnlData.map(d => d.date)) %>,
+      datasets: [{
+        label: 'Daily P&L',
+        data: <%- JSON.stringify(dailyPnlData.map(d => d.pnl)) %>,
+        backgroundColor: <%- JSON.stringify(dailyPnlData.map(d => d.pnl >= 0 ? 'rgba(34,197,94,0.8)' : 'rgba(239,68,68,0.85)')) %>,
+        borderColor: <%- JSON.stringify(dailyPnlData.map(d => d.pnl >= 0 ? '#16a34a' : '#dc2626')) %>,
+        borderWidth: 1
+      }]
+    },
+    options: { responsive:true, scales: darkScales, plugins: darkPlugins }
+  });
+
+  // Mistakes (doughnut)
+  const mistakesCtx = document.getElementById('mistakesChart').getContext('2d');
+  new Chart(mistakesCtx, {
+    type: 'doughnut',
+    data: {
+      labels: <%- JSON.stringify(commonMistakes.map(m => m.name)) %>,
+      datasets: [{
+        data: <%- JSON.stringify(commonMistakes.map(m => m.count)) %>,
+        backgroundColor: ['#ef4444','#f97316','#eab308','#10b981','#3b82f6'],
+        borderColor: '#0b1220', borderWidth: 2
+      }]
+    },
+    options: { plugins: darkPlugins }
+  });
+</script>
+
+<%- include('include/footer') %>

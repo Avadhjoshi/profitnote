@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en" x-data="{ tab: 'login', showPwd:false, showPwd2:false }" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ProfitNote — Sign In</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Alpine.js -->
+  <script src="https://unpkg.com/alpinejs" defer></script>
+
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+
+  <!-- Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --card:#121214; --card-2:#0f0f12; --ink:#e5e7eb; --muted:#9ca3af; --brand:#6d5efc; --brand-2:#4f46e5; --ok:#22c55e; --danger:#ef4444;
+    }
+    * { font-family: 'Poppins', sans-serif; }
+    [x-cloak]{ display:none !important; }
+
+    /* Autofill fix on dark backgrounds */
+    input:-webkit-autofill {
+      -webkit-box-shadow: 0 0 0px 1000px #0f0f12 inset !important;
+      -webkit-text-fill-color: #fff !important;
+      caret-color:#fff;
+    }
+
+    /* Soft slide-in */
+    @keyframes slide { from { opacity:0; transform: translateY(10px)} to { opacity:1; transform: translateY(0)} }
+    .animate-slide { animation: slide .35s ease-out both; }
+
+    /* Animated gradient background */
+    .bg-animate {
+      background: radial-gradient(1200px 800px at 10% 10%, rgba(109,94,252,.18), transparent 60%),
+                  radial-gradient(1000px 700px at 90% 20%, rgba(79,70,229,.15), transparent 60%),
+                  radial-gradient(900px 600px at 50% 90%, rgba(34,197,94,.10), transparent 65%),
+                  #0a0a0b;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-white bg-animate">
+
+  <!-- Toasts -->
+  <% if (typeof success !== 'undefined' && success && success.length) { %>
+    <div x-data="{ show:true }" x-init="setTimeout(()=>show=false, 4000)" x-show="show"
+         class="fixed top-5 right-5 z-50 px-4 py-2 rounded-md bg-green-600/90 shadow-lg animate-slide">
+      <i class="fa-solid fa-check-circle mr-2"></i><%= success %>
+    </div>
+  <% } %>
+
+  <% if (error && error.length > 0) { %>
+    <div x-data="{ show:true }" x-init="setTimeout(()=>show=false, 4500)" x-show="show"
+         class="fixed top-5 right-5 z-50 px-4 py-2 rounded-md bg-red-600/90 shadow-lg animate-slide">
+      <i class="fa-solid fa-triangle-exclamation mr-2"></i><%= error %>
+    </div>
+  <% } %>
+
+  <div class="relative isolate">
+    <!-- Top glow -->
+    <div class="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[80vw] h-[80vw] rounded-full blur-3xl opacity-30" style="background: radial-gradient(closest-side, rgba(109,94,252,.35), transparent)"></div>
+
+    <div class="mx-auto max-w-7xl px-6 lg:px-8 py-10 lg:py-16">
+      <div class="grid lg:grid-cols-2 gap-10 items-center">
+
+        <!-- Brand / Pitch -->
+        <section class="space-y-8">
+          <a href="/" class="inline-flex items-center gap-3">
+            <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 grid place-items-center shadow-lg shadow-indigo-500/25">
+              <i class="fa-solid fa-chart-line text-white"></i>
+            </div>
+            <span class="text-xl font-semibold tracking-wide">ProfitNote</span>
+          </a>
+
+          <div>
+            <h1 class="text-3xl sm:text-4xl font-bold leading-tight">
+              Smarter insights. <span class="text-indigo-400">Stronger profits.</span>
+            </h1>
+            <p class="text-gray-400 mt-3 max-w-xl">
+              Log trades, track performance, and get AI-powered coaching — all in one blazing-fast dashboard.
+            </p>
+          </div>
+
+          <div class="grid sm:grid-cols-3 gap-4 text-sm">
+            <div class="rounded-2xl p-4 bg-white/5 ring-1 ring-white/10 backdrop-blur">
+              <div class="font-semibold">99.95% Uptime</div>
+              <div class="text-gray-400 mt-1">Reliable sync</div>
+            </div>
+            <div class="rounded-2xl p-4 bg-white/5 ring-1 ring-white/10 backdrop-blur">
+              <div class="font-semibold">1200+ Symbols</div>
+              <div class="text-gray-400 mt-1">Crypto, FX, Commodities</div>
+            </div>
+            <div class="rounded-2xl p-4 bg-white/5 ring-1 ring-white/10 backdrop-blur">
+              <div class="font-semibold">AI Insights</div>
+              <div class="text-gray-400 mt-1">Reduce mistakes</div>
+            </div>
+          </div>
+
+          <div class="hidden lg:flex items-center gap-4 text-sm text-gray-400">
+            <i class="fa-solid fa-shield-halved text-green-400"></i> 2FA Security
+            <span class="h-1 w-1 rounded-full bg-gray-600"></span>
+            <i class="fa-solid fa-lock text-indigo-400"></i> Encrypted at rest
+            <span class="h-1 w-1 rounded-full bg-gray-600"></span>
+            <i class="fa-solid fa-bolt text-yellow-300"></i> Real-time refresh
+          </div>
+        </section>
+
+        <!-- Auth Card -->
+        <section class="relative">
+          <div class="rounded-3xl bg-gradient-to-b from-white/10 to-white/5 ring-1 ring-white/10 shadow-2xl backdrop-blur-xl p-6 sm:p-8 animate-slide">
+            <!-- Tabs -->
+            <div class="flex items-center gap-2 rounded-xl p-1 bg-white/5 ring-1 ring-white/10 mb-6">
+              <button @click="tab='login'"
+                      :class="tab==='login' ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:text-white'"
+                      class="w-1/3 py-2 rounded-lg text-sm font-medium transition">
+                Login
+              </button>
+              <button @click="tab='signup'"
+                      :class="tab==='signup' ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:text-white'"
+                      class="w-1/3 py-2 rounded-lg text-sm font-medium transition">
+                Sign Up
+              </button>
+              <button @click="tab='forgot'"
+                      :class="tab==='forgot' ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:text-white'"
+                      class="w-1/3 py-2 rounded-lg text-sm font-medium transition">
+                Forgot
+              </button>
+            </div>
+
+            <!-- LOGIN -->
+            <div x-show="tab==='login'" x-cloak>
+              <h2 class="text-2xl font-semibold mb-1">Welcome back</h2>
+              <p class="text-gray-400 text-sm mb-6">Enter your credentials to continue.</p>
+
+              <form action="/login" method="POST" class="space-y-4">
+                <div>
+                  <label class="block text-sm text-gray-300 mb-1">Email</label>
+                  <div class="flex items-center gap-2 bg-[#0f0f12] ring-1 ring-white/10 focus-within:ring-indigo-500 rounded-xl px-3 py-2.5">
+                    <i class="fa-solid fa-envelope text-gray-400"></i>
+                    <input type="email" name="email" required placeholder="you@domain.com"
+                           class="w-full bg-transparent outline-none placeholder-gray-500 text-white text-sm">
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm text-gray-300 mb-1">Password</label>
+                  <div class="flex items-center gap-2 bg-[#0f0f12] ring-1 ring-white/10 focus-within:ring-indigo-500 rounded-xl px-3 py-2.5">
+                    <i class="fa-solid fa-lock text-gray-400"></i>
+                    <input :type="showPwd ? 'text' : 'password'" name="password" required placeholder="••••••••"
+                           class="w-full bg-transparent outline-none placeholder-gray-500 text-white text-sm">
+                    <button type="button" @click="showPwd=!showPwd" class="text-gray-400 hover:text-gray-200">
+                      <i :class="showPwd ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between text-sm">
+                  <label class="inline-flex items-center gap-2 text-gray-300">
+                    <input type="checkbox" class="rounded bg-transparent border-gray-600" />
+                    Remember me
+                  </label>
+                  <button type="button" class="text-indigo-400 hover:text-indigo-300" @click="tab='forgot'">Forgot password?</button>
+                </div>
+
+                <button type="submit"
+                        class="w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 font-medium shadow-lg shadow-indigo-500/25">
+                  Sign in
+                </button>
+
+                <!-- Divider -->
+                <div class="relative my-5">
+                  <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-white/10"></div>
+                  </div>
+                  <div class="relative flex justify-center">
+                    <span class="px-2 text-xs text-gray-400 bg-transparent">Or continue with</span>
+                  </div>
+                </div>
+
+                <a href="/auth/google"
+                   class="w-full inline-flex items-center justify-center gap-3 py-2.5 rounded-xl bg-white/5 ring-1 ring-white/10 hover:bg-white/[0.08] transition">
+                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google"/>
+                  <span class="text-sm">Google</span>
+                </a>
+
+                <p class="text-xs text-gray-400 text-center mt-4">
+                  Don’t have an account?
+                  <button type="button" class="text-indigo-400 hover:text-indigo-300 font-medium" @click="tab='signup'">Create one</button>
+                </p>
+              </form>
+            </div>
+
+            <!-- SIGNUP -->
+            <div x-show="tab==='signup'" x-cloak>
+              <h2 class="text-2xl font-semibold mb-1">Create your account</h2>
+              <p class="text-gray-400 text-sm mb-6">Start journaling smarter in minutes.</p>
+
+              <form action="/signup" method="POST" class="space-y-4">
+                <div class="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm text-gray-300 mb-1">Full Name</label>
+                    <div class="flex items-center gap-2 bg-[#0f0f12] ring-1 ring-white/10 focus-within:ring-indigo-500 rounded-xl px-3 py-2.5">
+                      <i class="fa-solid fa-user text-gray-400"></i>
+                      <input type="text" name="registerName" required placeholder="John Doe" class="w-full bg-transparent outline-none text-sm">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm text-gray-300 mb-1">Email</label>
+                    <div class="flex items-center gap-2 bg-[#0f0f12] ring-1 ring-white/10 focus-within:ring-indigo-500 rounded-xl px-3 py-2.5">
+                      <i class="fa-solid fa-envelope text-gray-400"></i>
+                      <input type="email" name="registerEmail" required placeholder="you@domain.com" class="w-full bg-transparent outline-none text-sm">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm text-gray-300 mb-1">Password</label>
+                    <div class="flex items-center gap-2 bg-[#0f0f12] ring-1 ring-white/10 focus-within:ring-indigo-500 rounded-xl px-3 py-2.5">
+                      <i class="fa-solid fa-lock text-gray-400"></i>
+                      <input :type="showPwd ? 'text' : 'password'" name="registerPassword" required placeholder="••••••••" class="w-full bg-transparent outline-none text-sm">
+                      <button type="button" @click="showPwd=!showPwd" class="text-gray-400 hover:text-gray-200">
+                        <i :class="showPwd ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm text-gray-300 mb-1">Confirm Password</label>
+                    <div class="flex items-center gap-2 bg-[#0f0f12] ring-1 ring-white/10 focus-within:ring-indigo-500 rounded-xl px-3 py-2.5">
+                      <i class="fa-solid fa-lock text-gray-400"></i>
+                      <input :type="showPwd2 ? 'text' : 'password'" name="confirm_password" required placeholder="••••••••" class="w-full bg-transparent outline-none text-sm">
+                      <button type="button" @click="showPwd2=!showPwd2" class="text-gray-400 hover:text-gray-200">
+                        <i :class="showPwd2 ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+ <div class="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm text-gray-300 mb-1">Refer Code</label>
+                    <div class="flex items-center gap-2 bg-[#0f0f12] ring-1 ring-white/10 focus-within:ring-indigo-500 rounded-xl px-3 py-2.5">
+                      <i class="fa-solid fa-user text-gray-400"></i>
+                      <input type="text" name="refer_code"  placeholder="" class="w-full bg-transparent outline-none text-sm">
+                    </div>
+                  </div>
+                </div>
+
+                <label class="inline-flex items-center gap-2 text-xs text-gray-300">
+                  <input type="checkbox" required class="rounded bg-transparent border-gray-600">
+                  I agree to the <a href="/terms" class="text-indigo-400 hover:text-indigo-300 ml-1">Terms</a> & <a href="/privacy" class="text-indigo-400 hover:text-indigo-300">Privacy</a>.
+                </label>
+
+                <button type="submit"
+                        class="w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 font-medium shadow-lg shadow-indigo-500/25">
+                  Create account
+                </button>
+
+                <div class="relative my-5">
+                  <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-white/10"></div>
+                  </div>
+                  <div class="relative flex justify-center">
+                    <span class="px-2 text-xs text-gray-400 bg-transparent">Or continue with</span>
+                  </div>
+                </div>
+
+                <a href="/auth/google"
+                   class="w-full inline-flex items-center justify-center gap-3 py-2.5 rounded-xl bg-white/5 ring-1 ring-white/10 hover:bg-white/[0.08] transition">
+                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google"/>
+                  <span class="text-sm">Google</span>
+                </a>
+
+                <p class="text-xs text-gray-400 text-center mt-4">
+                  Already have an account?
+                  <button type="button" class="text-indigo-400 hover:text-indigo-300 font-medium" @click="tab='login'">Sign in</button>
+                </p>
+              </form>
+            </div>
+
+            <!-- FORGOT -->
+            <div x-show="tab==='forgot'" x-cloak>
+              <h2 class="text-2xl font-semibold mb-1">Reset your password</h2>
+              <p class="text-gray-400 text-sm mb-6">We’ll send reset instructions to your email.</p>
+
+              <form action="/forgot-password" method="POST" class="space-y-4">
+                <div>
+                  <label class="block text-sm text-gray-300 mb-1">Email</label>
+                  <div class="flex items-center gap-2 bg-[#0f0f12] ring-1 ring-white/10 focus-within:ring-indigo-500 rounded-xl px-3 py-2.5">
+                    <i class="fa-solid fa-envelope text-gray-400"></i>
+                    <input type="email" name="email" required placeholder="you@domain.com"
+                           class="w-full bg-transparent outline-none placeholder-gray-500 text-white text-sm">
+                  </div>
+                </div>
+
+                <button type="submit"
+                        class="w-full py-2.5 rounded-xl bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 font-medium shadow-lg shadow-yellow-500/20">
+                  Send reset link
+                </button>
+
+                <p class="text-xs text-gray-400 text-center mt-4">
+                  Remembered it?
+                  <button type="button" class="text-indigo-400 hover:text-indigo-300 font-medium" @click="tab='login'">Back to login</button>
+                </p>
+
+                <div class="relative my-5">
+                  <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-white/10"></div>
+                  </div>
+                  <div class="relative flex justify-center">
+                    <span class="px-2 text-xs text-gray-400 bg-transparent">Or continue with</span>
+                  </div>
+                </div>
+
+                <a href="/auth/google"
+                   class="w-full inline-flex items-center justify-center gap-3 py-2.5 rounded-xl bg-white/5 ring-1 ring-white/10 hover:bg-white/[0.08] transition">
+                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google"/>
+                  <span class="text-sm">Google</span>
+                </a>
+              </form>
+            </div>
+          </div>
+
+          <!-- Small reassurance row -->
+          <div class="flex items-center justify-center gap-3 text-xs text-gray-400 mt-4">
+            <i class="fa-solid fa-lock"></i> Your credentials are encrypted & never shared
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Bottom gradient ring -->
+    <div class="pointer-events-none absolute -bottom-24 left-1/2 -translate-x-1/2 w-[75vw] h-[75vw] rounded-full blur-3xl opacity-25" style="background: radial-gradient(closest-side, rgba(79,70,229,.35), transparent)"></div>
+  </div>
+</body>
+</html>

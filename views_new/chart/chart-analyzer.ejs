@@ -1,0 +1,228 @@
+<%- include('../include/header') %>
+<%- include('../include/sidebar') %>
+
+<!-- Toast Container -->
+<div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+<div class="p-6 text-white">
+  <div class="max-w-5xl mx-auto">
+
+    <!-- Page Heading -->
+    <h2 class="text-3xl font-extrabold mb-6 flex items-center gap-3">📈 AI Chart Analysis</h2>
+
+    <!-- Upload Section -->
+    <form id="chartForm" enctype="multipart/form-data" class="bg-[#1e293b] p-6 rounded-xl shadow-lg border border-gray-700">
+      <label class="block mb-2 font-semibold text-gray-300 text-sm">Upload Chart Image</label>
+
+      <!-- Drag & Drop Zone -->
+      <div id="dropZone" class="transition-all border-2 border-dashed border-gray-500 p-6 text-center rounded-lg bg-gray-800 hover:border-green-500 hover:bg-gray-700 cursor-pointer">
+        <p class="text-gray-400 text-sm">📎 Drag & drop an image here or click to select</p>
+        <input id="fileInput" type="file" name="chart" accept="image/*" required hidden>
+      </div>
+
+      <!-- Image Preview -->
+      <div id="imagePreview" class="mt-4 hidden">
+        <p class="text-xs mb-2 text-gray-400 font-semibold">Preview:</p>
+        <img id="previewImg" src="" class="rounded shadow-md max-h-60 border border-gray-600 hover:scale-105 transition-transform">
+      </div>
+
+      <button type="submit" class="bg-green-600 hover:bg-green-700 px-5 py-2.5 mt-6 rounded-lg font-semibold transition">🚀 Analyze</button>
+    </form>
+    <!--<div class="mt-12">
+      <h2 class="text-2xl font-semibold mb-4 flex items-center gap-2">📊 Live Chart Viewer</h2>
+      <div class="rounded overflow-hidden border border-gray-700 shadow-lg">
+        <div id="tv_chart_container" style="height: 500px;"></div>
+      </div>
+      <button id="tvCaptureBtn" class="bg-yellow-500 hover:bg-yellow-600 px-5 py-2 mt-4 rounded font-semibold text-black">
+        📸 Capture & Analyze
+      </button>
+    </div>-->
+
+    <!-- Analysis Result -->
+    <div id="analysisResult" class="mt-10 hidden bg-[#0f172a] p-6 rounded-xl border border-gray-700 shadow">
+      <h3 class="text-xl font-bold mb-4 text-gray-200">📋 Analysis Result</h3>
+      <img id="uploadedChart" class="rounded max-h-64 mb-4 border border-gray-600 hidden" />
+      <div id="analysisText" class="prose prose-invert max-w-none text-sm leading-relaxed"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://s3.tradingview.com/tv.js"></script>
+
+<script>
+  const dropZone = document.getElementById("dropZone");
+  const fileInput = document.getElementById("fileInput");
+  const imagePreview = document.getElementById("imagePreview");
+  const previewImg = document.getElementById("previewImg");
+  const chartForm = document.getElementById("chartForm");
+  const analysisResult = document.getElementById("analysisResult");
+  const analysisText = document.getElementById("analysisText");
+  const uploadedChart = document.getElementById("uploadedChart");
+  const tvCaptureBtn = document.getElementById("tvCaptureBtn");
+
+  // Drag-drop logic
+  dropZone.addEventListener("click", () => fileInput.click());
+  dropZone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropZone.classList.add("border-green-400", "bg-gray-700");
+  });
+  dropZone.addEventListener("dragleave", () => {
+    dropZone.classList.remove("border-green-400", "bg-gray-700");
+  });
+  dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropZone.classList.remove("border-green-400", "bg-gray-700");
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("image/")) {
+      fileInput.files = e.dataTransfer.files;
+      showPreview(file);
+    }
+  });
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files[0];
+    if (file && file.type.startsWith("image/")) {
+      showPreview(file);
+    }
+  });
+
+  function showPreview(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      previewImg.src = reader.result;
+      uploadedChart.src = reader.result;
+      imagePreview.classList.remove("hidden");
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Form Submit
+  chartForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const formData = new FormData(chartForm);
+    const submitBtn = chartForm.querySelector("button[type=submit]");
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Analyzing...";
+
+    analysisResult.classList.add("hidden");
+
+    try {
+      const res = await fetch("/analyze-chart", {
+        method: "POST",
+        body: formData
+      });
+
+      const json = await res.json();
+      submitBtn.disabled = false;
+      submitBtn.innerText = "Analyze";
+
+      if (json.success) {
+        analysisText.innerHTML = marked.parse(json.result);
+        uploadedChart.classList.remove("hidden");
+        analysisResult.classList.remove("hidden");
+        showToast("✅ Chart analyzed successfully!", "success");
+      } else {
+        showToast(json.error || "❌ Analysis failed.", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("❌ Something went wrong.", "error");
+      submitBtn.disabled = false;
+      submitBtn.innerText = "Analyze";
+    }
+  });
+
+  // Toast Function
+  function showToast(message, type = "info") {
+    const toast = document.createElement("div");
+    toast.className = `toast text-sm px-4 py-3 rounded shadow font-medium text-white transition duration-300 ${
+      type === "error"
+        ? "bg-red-600"
+        : type === "success"
+        ? "bg-green-600"
+        : "bg-gray-700"
+    }`;
+    toast.textContent = message;
+    document.getElementById("toastContainer").appendChild(toast);
+    setTimeout(() => {
+      toast.classList.add("opacity-0");
+      setTimeout(() => toast.remove(), 300);
+    }, 4000);
+  }
+
+  // TradingView Widget Setup
+  let tvWidget;
+  window.addEventListener('DOMContentLoaded', () => {
+    tvWidget = new TradingView.widget({
+      container_id: "tv_chart_container",
+      width: "100%",
+      height: 500,
+      symbol: "NSE:RELIANCE",
+      interval: "1",
+      timezone: "Asia/Kolkata",
+      theme: "dark",
+      style: "1",
+      locale: "en",
+      toolbar_bg: "#1e293b",
+      enable_publishing: false,
+      allow_symbol_change: true,
+      save_image: false,
+      studies: [],
+      withdateranges: true
+    });
+  });
+
+  // Capture & Analyze Button
+  tvCaptureBtn.addEventListener("click", async () => {
+    if (!tvWidget) return;
+
+    showToast("📸 Capturing chart...", "info");
+    try {
+      tvWidget.takeScreenshot().then(async (base64) => {
+        const blob = await (await fetch(base64)).blob();
+        const formData = new FormData();
+        formData.append("chart", blob, "tv_chart.png");
+
+        const res = await fetch("/analyze-chart", {
+          method: "POST",
+          body: formData
+        });
+
+        const json = await res.json();
+
+        if (json.success) {
+          analysisText.innerHTML = marked.parse(json.result);
+          uploadedChart.src = base64;
+          uploadedChart.classList.remove("hidden");
+          analysisResult.classList.remove("hidden");
+          showToast("✅ Chart analyzed successfully!", "success");
+        } else {
+          showToast(json.error || "❌ Analysis failed.", "error");
+        }
+      });
+    } catch (err) {
+      console.error("Capture error", err);
+      showToast("❌ Failed to capture or analyze chart.", "error");
+    }
+  });
+</script>
+
+<style>
+  .toast {
+    animation: slideIn 0.3s ease forwards;
+  }
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+
+<%- include('../include/footer') %>

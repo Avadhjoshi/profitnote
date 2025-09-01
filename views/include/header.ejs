@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profit Note | Advanced Trading Software</title>
+
+  <!-- Tailwind + your config -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://profitnote.acutetech.in/assets/tailwind-config.js"></script>
+
+  <!-- Alpine -->
+  <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+  <!-- Icons + Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- jQuery (Select2/Datepicker deps) -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <!-- jQuery UI Datepicker -->
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+
+  <!-- flatpickr -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+  <!-- Markdown -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Select2 -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+  <!-- Toastify -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+  <style>
+    [x-cloak] { display: none !important; }
+  </style>
+</head>
+<body class="bg-[#0f172a] text-white" style="font-family: 'Poppins', sans-serif;">
+
+<!-- ===== Wrapper with Alpine state ===== -->
+<div
+  x-data="{
+    open:false,
+    lockScroll(val){ document.documentElement.style.overflow = val ? 'hidden' : '' }
+  }"
+  x-effect="lockScroll(open)"
+  @keydown.window.escape="open=false"
+  class="flex flex-col md:flex-row min-h-screen"
+>
+
+  <!-- ===== Mobile Top Bar ===== -->
+  <div class="md:hidden flex items-center justify-between bg-[#1e293b] p-4 border-b border-white/10">
+    <button
+      @click="open = !open"
+      :aria-expanded="open ? 'true' : 'false'"
+      aria-controls="pp-sidebar"
+      class="text-white"
+      aria-label="Open menu"
+    >
+      <i class="fas fa-bars text-xl"></i>
+    </button>
+
+    <a href="/dashboard" class="text-lg font-bold">Profit Note</a>
+
+    <div class="bg-white rounded-full w-8 h-8 flex items-center justify-center text-black font-bold">
+      <%= (user?.name?.charAt(0) || 'P').toUpperCase() %>
+    </div>
+  </div>

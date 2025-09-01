@@ -1,0 +1,471 @@
+<%- include('../include/header') %>
+<%- include('../include/sidebar') %>
+
+<div class="max-w-7xl mx-auto p-6 bg-[#1e293b] text-white rounded-xl shadow">
+  <h2 class="text-2xl font-semibold mb-6 border-b border-gray-600 pb-3">Add New Trade</h2>
+  <div id="toast-container" class="fixed top-6 right-6 z-50 space-y-4"></div>
+
+  <form id="tradeForm" action="/trades/add" method="POST" enctype="multipart/form-data" class="space-y-6" novalidate>
+  
+    <!-- GENERAL INFO -->
+<div class="bg-[#0f172a] border border-gray-700 rounded-lg p-4 mb-6">
+  <h3 class="text-xl font-semibold mb-4 text-white">General Info</h3>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- Market Type -->
+    <div>
+      <label class="block text-sm mb-1">Market Type *</label>
+      <select name="market_type" id="market_type" required class="form-select w-full bg-[#334155] text-white border border-[#475569] rounded p-1">
+        <option value="">Select</option>
+        <% markets.forEach(m => { %>
+          <option value="<%= m.id %>" data-name="<%= m.market_name.toLowerCase() %>"><%= m.market_name %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <!-- Broker -->
+    <div>
+      <label class="block text-sm mb-1">Broker *</label>
+      <select name="broker_id" id="broker_id" required class="form-select w-full bg-[#334155] text-white border border-[#475569] rounded p-1">
+        <option value="">Select Market First</option>
+      </select>
+    </div>
+
+    <!-- Date -->
+    <div>
+      <label class="block text-sm mb-1">Date *</label>
+      <input type="text" name="datetime" id="tradeDate" placeholder="DD/MM/YYYY"
+        class="form-input w-full bg-[#334155] text-white border border-[#475569] rounded p-1" required>
+    </div>
+  </div>
+</div>
+
+<!-- TRADE DETAILS -->
+<div class="bg-[#0f172a] border border-gray-700 rounded-lg p-4 mb-6">
+  <h3 class="text-xl font-semibold mb-4 text-white">Trade Details</h3>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <!-- Symbol -->
+    <div>
+      <label class="block text-sm mb-1">Symbol *</label>
+      <input type="text" name="symbol" required placeholder="RELIANCE, BTCUSDT"
+        class="form-input w-full bg-[#334155] text-white border border-[#475569] rounded p-1">
+    </div>
+  <!-- Direction -->
+      <div>
+        <label class="block text-sm mb-1">Direction *</label>
+        <div class="flex space-x-2">
+          <input type="radio" id="long" name="trade_type" value="1" class="hidden peer/long" checked>
+          <label for="long" class="px-4 py-2 border border-green-500 rounded cursor-pointer peer-checked/long:bg-green-600">↑ Long</label>
+
+          <input type="radio" id="short" name="trade_type" value="2" class="hidden peer/short">
+          <label for="short" class="px-4 py-2 border border-red-500 rounded cursor-pointer peer-checked/short:bg-red-600">↓ Short</label>
+        </div>
+      </div>
+    <!-- Entry Price -->
+    <div>
+      <label class="block text-sm mb-1">Entry Price (<span class="currencySymbol">₹</span>) *</label>
+      <input type="number" step="0.01" name="entry_price" id="entry_price"
+        class="form-input w-full bg-[#334155] text-white border border-[#475569] rounded p-1" required>
+    </div>
+      <!-- Quantity -->
+    <div>
+      <label class="block text-sm mb-1">Quantity *</label>
+      <input type="number" step="0.01" name="entry_quantity" id="entry_quantity"
+        class="form-input w-full bg-[#334155] text-white border border-[#475569] rounded p-1" required>
+    </div>
+
+ <!-- Leverage (conditional for Crypto) -->
+    <div id="leverageWrapper" style="display: none;">
+      <label class="block text-sm mb-1">Leverage (x)</label>
+      <input type="number" name="leverage" min="1" max="100" id="leverage"
+        class="form-input w-full bg-[#334155] text-white border border-[#475569] rounded p-1">
+    </div>
+    <!-- Actual Margin Used (auto-calculated for crypto) -->
+    <div id="marginUsedWrapper" style="display: none;">
+   <label id="marginLabel" class="block text-sm mb-1">Actual Margin Used (<span class="currencySymbol">₹</span>)</label>
+       <input type="text" id="margin_used" name="margin_used" readonly
+        class="form-input w-full bg-[#334155] text-white border border-[#475569] rounded p-1">
+    </div>
+
+  
+   
+    <!-- Stop Loss -->
+    <div>
+      <label class="block text-sm mb-1">Stop Loss</label>
+      <input type="number" name="stop_loss" class="form-input w-full bg-[#334155] text-white border border-[#475569] rounded p-1">
+    </div>
+
+    <!-- Target -->
+    <div>
+      <label class="block text-sm mb-1">Target</label>
+      <input type="number" name="target" class="form-input w-full bg-[#334155] text-white border border-[#475569] rounded p-1">
+    </div>
+ <!-- Exit Price -->
+    <div>
+      <label class="block text-sm mb-1">Exit Price *</label>
+      <input type="number" step="0.01" name="exit_price" id="exit_price"
+        class="form-input w-full bg-[#334155] text-white border border-[#475569] rounded p-1" required>
+    </div>
+
+   <div>
+      <label class="block text-sm mb-1">Brokerage</label>
+      <input type="number" step="0.01" name="brokerage" id="brokerage" 
+        class="form-input w-full bg-[#334155] text-white border border-[#475569] rounded p-1">
+    </div>
+
+    <!-- P&L Amount -->
+    <div>
+      <label class="block text-sm mb-1">P&L Amount</label>
+      <input type="number" step="0.01" name="pnl_amount" id="pl_amount" readonly
+        class="form-input w-full bg-[#334155] text-white border border-[#475569] rounded p-1">
+    </div>
+
+    <!-- P&L % -->
+    <div>
+      <label class="block text-sm mb-1">P&L (%)</label>
+      <input type="number" step="0.01" name="pnl_percent" id="pl_percent" readonly
+        class="form-input w-full bg-[#334155] text-white border border-[#475569] rounded p-1">
+    </div>
+  </div>
+
+    
+</div>
+<!-- TRADE REFLECTION -->
+<div class="bg-[#0f172a] border border-gray-700 rounded-lg p-4 mb-6">
+  <h3 class="text-xl font-semibold mb-4 text-white">Trade Reflection</h3>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- Strategy -->
+    <div>
+      <label class="block text-sm mb-1">Strategy *</label>
+      <select name="strategy_id" required class="form-select w-full bg-[#334155] text-white border border-[#475569] rounded p-1">
+        <% strategies.forEach(s => { %>
+          <option value="<%= s.id %>"><%= s.name %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <!-- Outcome -->
+    <div>
+      <label class="block text-sm mb-1">Outcome Summary *</label>
+      <select name="outcome_summary_id" required class="form-select w-full bg-[#334155] text-white border border-[#475569] rounded p-1">
+        <% summaries.forEach(o => { %>
+          <option value="<%= o.id %>"><%= o.label %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <!-- Trade Rationale -->
+    <div class="sm:col-span-2 lg:col-span-3">
+      <label class="block text-sm mb-1">Trade Rationale / Analysis</label>
+      <textarea name="rationale" rows="3" class="w-full px-4 py-2 rounded-md bg-[#334155] text-white border border-[#475569]"></textarea>
+    </div>
+  </div>
+</div>
+<!-- EMOTIONS & RULES -->
+<div class="bg-[#0f172a] border border-gray-700 rounded-lg p-4 mb-6">
+  <h3 class="text-xl font-semibold mb-4 text-white">Emotions & Rules</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    
+    <!-- Rules Followed -->
+    <div>
+      <label class="block text-sm mb-2 text-white">Rules Followed</label>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <% rules.forEach(r => { %>
+          <label class="flex items-center gap-2 text-white">
+            <input type="checkbox" name="rules_followed[]" value="<%= r.id %>" class="form-checkbox text-blue-500 rounded">
+            <span><%= r.rule_name %></span>
+          </label>
+        <% }) %>
+      </div>
+    </div>
+
+    <!-- Emotional State -->
+    <div>
+      <label class="block text-sm mb-2 text-white">Emotional State During Trade</label>
+      <select name="emotion_id" class="form-select w-full bg-[#334155] text-white border border-[#475569] rounded p-1">
+        <% emotions.forEach(e => { %>
+          <option value="<%= e.id %>"><%= e.label %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <!-- Sliders -->
+    <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+      <div>
+        <label class="block text-sm mb-1 text-white">Entry Confidence Level (1-10)</label>
+        <input type="range" name="confidence_level" min="1" max="10" value="5" class="w-full">
+      </div>
+      <div>
+        <label class="block text-sm mb-1 text-white">Satisfaction Rating (1-10)</label>
+        <input type="range" name="satisfaction_level" min="1" max="10" value="5" class="w-full">
+      </div>
+    </div>
+  </div>
+</div>
+<!-- MISTAKES & LESSONS -->
+<div class="bg-[#0f172a] border border-gray-700 rounded-lg p-4 mb-6">
+  <h3 class="text-xl font-semibold mb-4 text-white">Mistakes & Lessons</h3>
+
+  <!-- Mistakes -->
+  <div class="mb-4">
+    <label class="block text-sm mb-1">Mistakes Made</label>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+      <% mistakes.forEach(m => { %>
+        <label class="flex items-center gap-2">
+          <input type="checkbox" name="mistakes[]" value="<%= m.id %>" class="form-checkbox rounded text-red-500">
+          <span><%= m.name %></span>
+        </label>
+      <% }) %>
+    </div>
+  </div>
+
+  <!-- Lessons -->
+  <div>
+    <label class="block text-sm mb-1">Lessons Learned</label>
+    <textarea name="lessons" rows="3" class="w-full px-4 py-2 rounded-md bg-[#334155] text-white border border-[#475569]" placeholder="What did you learn from this trade?"></textarea>
+  </div>
+</div>
+<!-- SCREENSHOT UPLOAD -->
+
+<div class="bg-[#0f172a] border border-gray-700 rounded-lg p-4 mb-6" x-data="imageUploader()">
+  <h3 class="text-xl font-semibold mb-4 text-white">Upload Screenshots</h3>
+  <label class="block text-sm font-medium text-white mb-2">Drag & Drop Images</label>
+
+  <div 
+    @dragover.prevent 
+    @drop.prevent="handleDrop($event)"
+    class="w-full h-32 flex items-center justify-center text-gray-400 bg-[#334155] border border-gray-600 rounded cursor-pointer"
+    @click="$refs.input.click()">
+    <span>Drag & Drop Images Here or Click to Browse</span>
+    <input type="file" x-ref="input" name="screenshots[]" multiple @change="handleFileSelect" accept="image/*" hidden>
+  </div>
+
+  <div class="mt-4 flex flex-wrap gap-4" id="preview-container">
+    <template x-for="(file, index) in files" :key="index">
+      <div class="relative w-24 h-24">
+        <img :src="file.preview" class="w-24 h-24 object-cover rounded shadow">
+        <button type="button" @click="removeFile(index)" class="absolute top-0 right-0 bg-red-600 text-white text-xs px-1 rounded-full">&times;</button>
+      </div>
+    </template>
+  </div>
+</div>
+    <!-- Submit Buttons -->
+    <div class="flex justify-end gap-4 mt-6">
+      <button type="reset" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded">Reset</button>
+      <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">Save Trade</button>
+    </div>
+  </form>
+</div>
+
+<script>
+function imageUploader() {
+  return {
+    files: [],
+    handleFileSelect(event) {
+      const selectedFiles = event.target.files;
+      this.addFiles(selectedFiles);
+    },
+    handleDrop(event) {
+      const droppedFiles = event.dataTransfer.files;
+      this.addFiles(droppedFiles);
+    },
+    addFiles(fileList) {
+      for (let i = 0; i < fileList.length; i++) {
+        const file = fileList[i];
+        if (file.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            this.files.push({ file, preview: e.target.result });
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+    },
+    removeFile(index) {
+      this.files.splice(index, 1);
+    }
+  }
+}
+  document.addEventListener("DOMContentLoaded", () => {
+    flatpickr("#tradeDate", {
+      dateFormat: "d/m/Y",
+      defaultDate: new Date()
+    });
+
+    const marketTypeSelect = document.getElementById('market_type');
+    const leverageWrapper = document.getElementById('leverageWrapper');
+    const marginUsedWrapper = document.getElementById('marginUsedWrapper');
+    const leverageInput = document.getElementById('leverage');
+    const entryPriceInput = document.getElementById('entry_price');
+    const qtyInput = document.getElementById('entry_quantity');
+    const marginUsedInput = document.getElementById('margin_used');
+
+    function updateLeverageVisibility() {
+      const selected = marketTypeSelect.options[marketTypeSelect.selectedIndex];
+      const isCrypto = selected?.dataset?.name?.toLowerCase() === 'crypto';
+
+      leverageWrapper.style.display = isCrypto ? 'block' : 'none';
+      marginUsedWrapper.style.display = isCrypto ? 'block' : 'none';
+
+      const symbols = document.getElementsByClassName('currencySymbol');
+      for (let i = 0; i < symbols.length; i++) {
+        symbols[i].innerText = isCrypto ? '$' : '₹';
+      }
+
+      if (!isCrypto) {
+        leverageInput.value = '';
+        marginUsedInput.value = '';
+      }
+    }
+
+    function calculateMarginUsed() {
+      const entry = parseFloat(entryPriceInput.value);
+      const qty = parseFloat(qtyInput.value);
+      const lev = parseFloat(leverageInput.value);
+      if (!isNaN(entry) && !isNaN(qty) && !isNaN(lev) && lev > 0) {
+        const margin = (entry * qty / lev).toFixed(2);
+        marginUsedInput.value = margin;
+      } else {
+        marginUsedInput.value = '';
+      }
+    }
+
+    // Attach margin listeners
+    if (leverageInput) leverageInput.addEventListener('input', calculateMarginUsed);
+    if (entryPriceInput) entryPriceInput.addEventListener('input', calculateMarginUsed);
+    if (qtyInput) qtyInput.addEventListener('input', calculateMarginUsed);
+    if (marketTypeSelect) {
+      marketTypeSelect.addEventListener('change', () => {
+        updateLeverageVisibility();
+        calculateMarginUsed();
+      });
+    }
+
+    updateLeverageVisibility();
+    calculateMarginUsed();
+
+    // Dynamic broker fetching
+    marketTypeSelect.addEventListener('change', async function () {
+      const selected = this.options[this.selectedIndex];
+      const isCrypto = selected.text.toLowerCase().includes('crypto');
+      document.getElementById('leverageWrapper').style.display = isCrypto ? 'block' : 'none';
+
+      const res = await fetch(`/trades/get-brokers?market_type=${this.value}`);
+      const brokers = await res.json();
+      const brokerSelect = document.getElementById('broker_id');
+      brokerSelect.innerHTML = '<option value="">Select Broker</option>';
+      brokers.forEach(b => {
+        brokerSelect.innerHTML += `<option value="${b.id}">${b.name}</option>`;
+      });
+    });
+
+  function calculatePnL() {
+  const entry = parseFloat(document.getElementById('entry_price').value);
+  const qty = parseFloat(document.getElementById('entry_quantity').value);
+  const exit = parseFloat(document.getElementById('exit_price').value);
+  const tradeType = document.querySelector('input[name="trade_type"]:checked')?.value; // "1" = long, "2" = short
+
+  if (!isNaN(entry) && !isNaN(qty) && !isNaN(exit) && tradeType) {
+    let pnl, pnlPercent;
+
+    if (tradeType === "1") { // Long
+      pnl = (exit - entry) * qty;
+      pnlPercent = ((exit - entry) / entry) * 100;
+    } else { // Short
+      pnl = (entry - exit) * qty;
+      pnlPercent = ((entry - exit) / entry) * 100;
+    }
+
+    document.getElementById('pl_amount').value = pnl.toFixed(2);
+    document.getElementById('pl_percent').value = pnlPercent.toFixed(2);
+  }
+}
+
+    ['entry_price', 'entry_quantity', 'exit_price'].forEach(id => {
+      document.getElementById(id).addEventListener('input', calculatePnL);
+    });
+
+    // Form submission
+    const form = document.getElementById('tradeForm');
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const requiredFields = [
+        { name: 'market_type', label: 'Market Type' },
+        { name: 'broker_id', label: 'Broker' },
+        { name: 'datetime', label: 'Date' },
+        { name: 'symbol', label: 'Symbol' },
+        { name: 'entry_price', label: 'Entry Price' },
+        { name: 'entry_quantity', label: 'Quantity' },
+        { name: 'exit_price', label: 'Exit Price' },
+        { name: 'strategy_id', label: 'Strategy' },
+        { name: 'outcome_summary_id', label: 'Outcome Summary' }
+      ];
+
+      for (const field of requiredFields) {
+        const el = form.elements[field.name];
+        if (!el || !el.value) {
+          Toastify({
+            text: `⚠️ Please fill in ${field.label}`,
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "#f97316"
+          }).showToast();
+          el?.focus();
+          return;
+        }
+      }
+
+      const formData = new FormData(form);
+
+      // Append screenshots from Alpine uploader
+      const uploader = document.querySelector('[x-data="imageUploader()"]')?.__x?.data;
+      if (uploader && uploader.files?.length > 0) {
+        uploader.files.forEach(f => {
+          formData.append('screenshots[]', f.file);
+        });
+      }
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      try {
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Saving...';
+        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+        const res = await fetch('/trades/add', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          Toastify({
+            text: "✅ " + data.message,
+            duration: 4000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "#22c55e"
+          }).showToast();
+          form.reset();
+          document.querySelector("#preview-container").innerHTML = "";
+          setTimeout(() => location.reload(), 2000);
+        } else {
+          throw new Error(data.message);
+        }
+      } catch (err) {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Save Trade';
+        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        Toastify({
+          text: "❌ " + err.message,
+          duration: 4000,
+          gravity: "top",
+          position: "right",
+          backgroundColor: "#ef4444"
+        }).showToast();
+      }
+    });
+  });
+</script>
+
+<%- include('../include/footer') %>

@@ -1,0 +1,282 @@
+
+<%- include('../include/header') %>
+<%- include('../include/sidebar') %>
+
+<!-- ====== Page Shell ====== -->
+<div class="pb-10">
+
+  <!-- ====== Sticky Filter Bar ====== -->
+  <div class="sticky top-0 z-30 backdrop-blur bg-black/30 border-b border-white/10">
+    <div class="px-4 md:px-6 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <h1 class="text-xl md:text-2xl font-semibold tracking-tight">Report</h1>
+
+      <form method="GET" class="flex flex-wrap gap-2 items-center">
+        <!-- Market -->
+        <select name="market" onchange="this.form.submit()"
+          class="bg-[#0b1220] text-white border border-white/10 text-sm px-3 py-2 rounded-lg hover:border-indigo-500/50 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+          <% marketList.forEach(m => { %>
+            <option value="<%= m.id %>" <%= market == m.id ? 'selected' : '' %>><%= m.market_name %></option>
+          <% }) %>
+        </select>
+
+        <!-- Month -->
+        <select name="month" onchange="this.form.submit()"
+          class="bg-[#0b1220] text-white border border-white/10 text-sm px-3 py-2 rounded-lg hover:border-indigo-500/50 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+          <% for (let m = 0; m < 12; m++) { %>
+            <option value="<%= m %>" <%= m == month ? 'selected' : '' %>>
+              <%= new Date(2000, m).toLocaleString('default', { month: 'long' }) %>
+            </option>
+          <% } %>
+        </select>
+
+        <!-- Year -->
+        <select name="year" onchange="this.form.submit()"
+          class="bg-[#0b1220] text-white border border-white/10 text-sm px-3 py-2 rounded-lg hover:border-indigo-500/50 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+          <% for (let y = 2024; y <= 2030; y++) { %>
+            <option value="<%= y %>" <%= y == year ? 'selected' : '' %>><%= y %></option>
+          <% } %>
+        </select>
+      </form>
+    </div>
+  </div>
+<div class="px-4 md:px-6 mt-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+  
+    <!-- Trade Performance -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:border-white/20 transition-all">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-base font-semibold text-white/90">Trade Performance</h2>
+        <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-300 grid place-items-center text-lg">
+          <i class="fas fa-chart-line"></i>
+        </div>
+      </div>
+
+      <div class="flex justify-center gap-6 text-3xl font-extrabold mb-2">
+        <span class="text-emerald-400"><%= tradePerformance.win %></span>
+        <span class="text-white/40">|</span>
+        <span class="text-rose-400"><%= tradePerformance.loss %></span>
+        <span class="text-white/40">|</span>
+        <span class="text-white/70"><%= tradePerformance.breakeven %></span>
+      </div>
+      <p class="text-center text-xs text-white/60 mb-6 tracking-wide">Win | Loss | Break Even</p>
+
+      <div class="grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <p class="text-white/60">Avg Win</p>
+          <p class="text-emerald-400 font-medium"><%= currencySymbol %><%= tradePerformance.avgWin.toFixed(2) %></p>
+        </div>
+        <div>
+          <p class="text-white/60">Avg Loss</p>
+          <p class="text-rose-400 font-medium"><%= currencySymbol %><%= tradePerformance.avgLoss.toFixed(2) %></p>
+        </div>
+        <div>
+          <p class="text-white/60">Win Rate</p>
+          <p class="text-white font-medium"><%= tradePerformance.winRate.toFixed(1) %>%</p>
+        </div>
+        <div>
+          <p class="text-white/60">Expectancy</p>
+          <p class="text-white font-medium"><%= currencySymbol %><%= tradePerformance.expectancy %></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily Performance -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:border-white/20 transition-all">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-base font-semibold text-white/90">Daily Performance</h2>
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-300 grid place-items-center text-lg">
+          <i class="fas fa-calendar-day"></i>
+        </div>
+      </div>
+
+      <div class="flex justify-center gap-6 text-3xl font-extrabold mb-2">
+        <span class="text-emerald-400"><%= dailyPerformance.winDays %></span>
+        <span class="text-white/40">|</span>
+        <span class="text-rose-400"><%= dailyPerformance.lossDays %></span>
+        <span class="text-white/40">|</span>
+        <span class="text-white/70"><%= dailyPerformance.beDays %></span>
+      </div>
+      <p class="text-center text-xs text-white/60 mb-6 tracking-wide">Win | Loss | Break Even Days</p>
+
+      <div class="grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <p class="text-white/60">Best Day</p>
+          <p class="text-emerald-400 font-medium"><%= currencySymbol %><%= Number(dailyPerformance.bestDay).toFixed(2) %></p>
+        </div>
+        <div>
+          <p class="text-white/60">Worst Day</p>
+          <p class="text-rose-400 font-medium"><%= currencySymbol %><%= Number(dailyPerformance.worstDay).toFixed(2) %></p>
+        </div>
+        <div>
+          <p class="text-white/60">Avg Win Day</p>
+          <p class="text-white font-medium"><%= currencySymbol %><%= dailyPerformance.avgWinDay %></p>
+        </div>
+        <div>
+          <p class="text-white/60">Avg Loss Day</p>
+          <p class="text-white font-medium"><%= currencySymbol %><%= dailyPerformance.avgLossDay %></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trade Execution -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:border-white/20 transition-all">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-base font-semibold text-white/90">Trade Execution</h2>
+        <div class="w-10 h-10 rounded-xl bg-fuchsia-500/20 text-fuchsia-300 grid place-items-center text-lg">
+          <i class="fas fa-play"></i>
+        </div>
+      </div>
+      <ul class="space-y-3 text-sm text-white/80">
+        <li class="flex justify-between"><span>Total Trades</span><span class="text-white"><%= tradeExecution.totalTrades %></span></li>
+        <li class="flex justify-between"><span>Avg Capital Used</span><span class="text-white"><%= currencySymbol %><%= tradeExecution.avgCapital.toFixed(2) %></span></li>
+        <li class="flex justify-between"><span>Most Profitable Strategy</span><span class="text-white"><%= tradeExecution.mostProfitableStrategy %></span></li>
+        <li class="flex justify-between"><span>Consecutive Wins</span><span class="text-emerald-400"><%= tradeExecution.consecutiveWins %></span></li>
+        <li class="flex justify-between"><span>Consecutive Losses</span><span class="text-rose-400"><%= tradeExecution.consecutiveLosses %></span></li>
+      </ul>
+    </div>
+
+    <!-- Time Metrics -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:border-white/20 transition-all">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-base font-semibold text-white/90">Time Metrics</h2>
+        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 grid place-items-center text-lg">
+          <i class="fas fa-hourglass-half"></i>
+        </div>
+      </div>
+      <ul class="space-y-3 text-sm text-white/80">
+        <li class="flex justify-between"><span>Trading Days</span><span class="text-white"><%= timeMetrics.tradingDays %></span></li>
+        <li class="flex justify-between"><span>Consecutive Win Days</span><span class="text-emerald-400"><%= timeMetrics.consecutiveWinDays %></span></li>
+        <li class="flex justify-between"><span>Consecutive Loss Days</span><span class="text-rose-400"><%= timeMetrics.consecutiveLossDays %></span></li>
+      </ul>
+    </div>
+
+    <!-- Setup Effectiveness -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:border-white/20 transition-all">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-base font-semibold text-white/90">Setup Effectiveness</h2>
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-300 grid place-items-center text-lg">
+          <i class="fas fa-lightbulb"></i>
+        </div>
+      </div>
+      <ul class="space-y-3 text-sm text-white/80">
+        <% strategyStats.forEach(stat => { %>
+          <li class="flex justify-between">
+            <span><%= stat.name %></span>
+            <span class="text-white"><%= stat.winRate %>% win rate</span>
+          </li>
+        <% }) %>
+      </ul>
+    </div>
+
+    <!-- Symbol Frequency -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:border-white/20 transition-all">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-base font-semibold text-white/90">Symbol Frequency</h2>
+        <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-300 grid place-items-center text-lg">
+          <i class="fas fa-hashtag"></i>
+        </div>
+      </div>
+      <% if (symbolFrequency.length === 0) { %>
+        <p class="text-sm text-white/60 italic">No data yet</p>
+      <% } else { %>
+        <ul class="text-sm space-y-2 text-white/90">
+          <% symbolFrequency.forEach(sym => { %>
+            <li class="flex justify-between">
+              <span><%= sym.symbol %></span>
+              <span><%= sym.count %> trades</span>
+            </li>
+          <% }) %>
+        </ul>
+      <% } %>
+    </div>
+
+    <!-- Capital Usage -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:border-white/20 transition-all">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-semibold text-white/90">Capital Usage</h2>
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-300 grid place-items-center text-lg">
+          <i class="fas fa-money-bill"></i>
+        </div>
+      </div>
+      <ul class="text-sm space-y-2 text-white/80">
+        <li class="flex justify-between"><span>Maximum</span><span class="text-white"><%= currencySymbol %><%= capital.max %></span></li>
+        <li class="flex justify-between"><span>Minimum</span><span class="text-white"><%= currencySymbol %><%= capital.min %></span></li>
+        <li class="flex justify-between"><span>Average</span><span class="text-white"><%= currencySymbol %><%= capital.avg.toFixed(2) %></span></li>
+        <li class="flex justify-between text-emerald-400"><span>P&L at Max Capital</span><span><%= currencySymbol %><%= capital.pnlMax %></span></li>
+        <li class="flex justify-between text-emerald-400"><span>P&L at Min Capital</span><span><%= currencySymbol %><%= capital.pnlMin %></span></li>
+      </ul>
+    </div>
+
+    <!-- Quantity Analysis -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:border-white/20 transition-all">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-semibold text-white/90">Quantity Analysis</h2>
+        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 grid place-items-center text-lg">
+          <i class="fas fa-crown"></i>
+        </div>
+      </div>
+      <ul class="text-sm space-y-2 text-white/80">
+        <li class="flex justify-between"><span>Maximum</span><span class="text-white"><%= quantity.max %></span></li>
+        <li class="flex justify-between"><span>Minimum</span><span class="text-white"><%= quantity.min %></span></li>
+        <li class="flex justify-between"><span>Average</span><span class="text-white"><%= quantity.avg.toFixed(2) %></span></li>
+        <li class="flex justify-between text-emerald-400"><span>P&L at Max Qty</span><span><%= currencySymbol %><%= quantity.pnlMax %></span></li>
+        <li class="flex justify-between text-emerald-400"><span>P&L at Min Qty</span><span><%= currencySymbol %><%= quantity.pnlMin %></span></li>
+      </ul>
+    </div>
+
+    <!-- Weekday Avg R:R -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:border-white/20 transition-all">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-semibold text-white/90">Weekday Avg R:R</h2>
+        <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-300 grid place-items-center text-lg">
+          <i class="fas fa-chart-line"></i>
+        </div>
+      </div>
+      <ul class="text-sm space-y-1 text-rose-300">
+        <% Object.keys(weekdayStats).forEach(day => { %>
+          <li class="flex justify-between">
+            <span class="text-white/80"><%= day %></span>
+            <span><%= (weekdayStats[day].rr / (weekdayStats[day].rrCount || 1)).toFixed(2) %>R</span>
+          </li>
+        <% }) %>
+      </ul>
+    </div>
+
+    <!-- Weekday Win Rate -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:border-white/20 transition-all">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-semibold text-white/90">Weekday Win Rate</h2>
+        <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-300 grid place-items-center text-lg">
+          <i class="fas fa-calendar-day"></i>
+        </div>
+      </div>
+      <ul class="text-sm space-y-1 text-emerald-300">
+        <% Object.keys(weekdayStats).forEach(day => { %>
+          <li class="flex justify-between">
+            <span class="text-white/80"><%= day %></span>
+            <span><%= ((weekdayStats[day].wins / weekdayStats[day].total) * 100).toFixed(1) %>%</span>
+          </li>
+        <% }) %>
+      </ul>
+    </div>
+
+    <!-- Daily Trade Activity -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:border-white/20 transition-all">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-semibold text-white/90">Daily Trade Activity</h2>
+        <div class="w-10 h-10 rounded-xl bg-fuchsia-500/20 text-fuchsia-300 grid place-items-center text-lg">
+          <i class="fas fa-clock"></i>
+        </div>
+      </div>
+      <ul class="text-sm space-y-2 text-white/80">
+        <li class="flex justify-between"><span>Avg Trades Per Day</span><span class="text-white"><%= dailyActivity.avgTradesPerDay.toFixed(2) %></span></li>
+        <li class="flex justify-between"><span>Max Trades in a Day</span><span class="text-white"><%= dailyActivity.maxTradesInADay %></span></li>
+        <li class="flex justify-between"><span>Days With Only 1 Trade</span><span class="text-white"><%= dailyActivity.oneTradeDays %></span></li>
+        <li class="flex justify-between text-rose-300"><span>Overtrading Days (&gt;7 trades)</span><span><%= dailyActivity.overtradeDays %></span></li>
+      </ul>
+    </div>
+
+  </div></div>
+  </div>
+
+
+<%- include('../include/footer') %>

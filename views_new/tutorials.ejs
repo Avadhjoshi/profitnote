@@ -1,0 +1,52 @@
+<%- include('include/header') %>
+<%- include('include/sidebar') %>
+<div class="p-6 bg-[#0f172a] min-h-screen text-white">
+  <h1 class="text-2xl font-bold mb-6">📚 Tutorials</h1>
+
+  <!-- Search and Filter -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+    <input type="text" placeholder="Search tutorials..." class="w-full md:w-1/2 px-4 py-2 rounded bg-[#1e293b] text-white placeholder-gray-400 border border-[#334155] focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <select class="w-full md:w-1/4 px-4 py-2 rounded bg-[#1e293b] text-white border border-[#334155] focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <option value="all">All Categories</option>
+      <option value="getting-started">Getting Started</option>
+      <option value="trading">Trading Tools</option>
+      <option value="analytics">Analytics</option>
+    </select>
+  </div>
+
+  <!-- Tutorials Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- Tutorial Card -->
+    <div class="bg-[#1e293b] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-5">
+      <div class="mb-4">
+        <h2 class="text-lg font-semibold text-white mb-1">Getting Started with Trade Diary</h2>
+        <p class="text-gray-400 text-sm">Learn how to set up your account, configure your first trades, and navigate the dashboard.</p>
+      </div>
+      <a href="#" class="inline-block mt-3 px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-sm text-white font-medium">Watch Tutorial</a>
+    </div>
+
+    <!-- Tutorial Card -->
+    <div class="bg-[#1e293b] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-5">
+      <div class="mb-4">
+        <h2 class="text-lg font-semibold text-white mb-1">Using Smart Alerts Effectively</h2>
+        <p class="text-gray-400 text-sm">Set up smart alerts to automate your reactions to market conditions and save valuable time.</p>
+      </div>
+      <a href="#" class="inline-block mt-3 px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-sm text-white font-medium">Watch Tutorial</a>
+    </div>
+
+    <!-- Tutorial Card -->
+    <div class="bg-[#1e293b] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-5">
+      <div class="mb-4">
+        <h2 class="text-lg font-semibold text-white mb-1">Analyzing Reports & Insights</h2>
+        <p class="text-gray-400 text-sm">Deep dive into your trade performance, psychology analysis, and execution metrics.</p>
+      </div>
+      <a href="#" class="inline-block mt-3 px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-sm text-white font-medium">Watch Tutorial</a>
+    </div>
+  </div>
+
+  <!-- Pagination or Load More -->
+  <div class="text-center mt-10">
+    <button class="px-6 py-2 rounded bg-[#334155] hover:bg-[#475569] text-sm font-medium">Load More</button>
+  </div>
+</div>
+<%- include('include/footer') %>

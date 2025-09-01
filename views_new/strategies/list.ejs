@@ -1,0 +1,359 @@
+<%- include('../include/header') %>
+<%- include('../include/sidebar') %>
+  <div id="toast-container" class="fixed top-6 right-6 z-50 space-y-2"></div>
+
+  <div class="sticky top-0 z-30 backdrop-blur bg-black/30 border-b border-white/10">
+    <div class="px-4 md:px-6 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <h1 class="text-xl md:text-2xl font-semibold tracking-tight">Strategies</h1>
+
+      <form method="GET"  id="marketFilterForm" class="flex flex-wrap gap-2 items-center">
+        <!-- Market -->
+        <select name="market" onchange="document.getElementById('marketFilterForm').submit()" 
+          class="bg-[#1e293b] border border-gray-700 text-sm text-white px-3 py-1 rounded-md">
+    <% marketList.forEach(m => { %>
+      <option value="<%= m.id %>" <%= selectedMarketId == m.id ? 'selected' : '' %>>
+        <%= m.market_name %>
+      </option>
+    <% }) %>
+  </select>
+
+      
+      </form>
+          <button type="button" onclick="openModal()" class="bg-blue-600 text-white px-4 py-1 text-sm rounded-md">+ New Strategy</button>
+
+    </div>
+  </div>
+
+<!-- Strategy Cards -->
+<div class="px-4 md:px-6 mt-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+  <% strategies.forEach(s => { %>
+    <div class="bg-[#1e293b] text-white rounded-xl overflow-hidden w-full max-w-sm shadow-md">
+      <div class="p-5">
+        <div class="flex justify-between items-start">
+          <div>
+            <h2 class="text-xl font-bold text-white"><%= s.name %></h2>
+            <p class="text-gray-400 text-sm"><%= s.description %></p>
+          </div>
+          <div class="bg-green-700 text-white text-sm font-semibold px-3 py-1 rounded-full"><%= s.usage %>%</div>
+        </div>
+       
+        <div class="grid grid-cols-2 gap-x-6 gap-y-2 mt-4 text-sm text-gray-400">
+          <div>
+            <p class="mb-1">Profit Factor</p>
+            <p class="text-white font-bold"><%= s.profit_factor %></p>
+          </div>
+          <!--<div>
+            <p class="mb-1">Risk/Trade</p>
+            <p class="text-white font-bold"><%= s.risk_trade %></p>
+          </div>-->
+          <div>
+       <p class="mb-1">Total Profit</p>
+        <p class="<%= s.total_profit < 0 ? 'text-red-400' : 'text-green-400' %> font-bold">
+  <%= s.total_profit < 0 ? '▼' : '▲' %> <%= currencySymbol %><%= Math.abs(s.total_profit).toFixed(2) %>
+</p>
+
+   </div>
+          <div>
+            <p class="mb-1">Win Rate</p>
+            <div class="w-full h-2 bg-green-500 rounded-full" style="width: <%= s.win_rate %>%"></div>
+          </div>
+        </div>
+      </div>
+
+        <div class="bg-[#334155] px-5 py-3 text-white font-semibold text-sm flex justify-between items-center hover:bg-[#3b475f] cursor-pointer">
+         <a href="/trades?strategy_id=<%= s.id %>" ><span>View Details</span></a>
+          <div class="flex gap-2">
+            <!-- Edit Icon -->
+            <button type="button" onclick="openEditModal('<%= s._id || s.id %>')" aria-label="Edit" title="Edit">
+              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-blue-400 hover:text-blue-600"><path d="M4 13.5V16h2.5l7.2-7.2-2.5-2.5L4 13.5zM14.8 6.7a1.1 1.1 0 000-1.5l-1-1a1.1 1.1 0 00-1.5 0l-1 1 2.5 2.5 1-1z" stroke-width="1.5"/></svg>
+            </button>
+            <!-- Delete Icon -->
+            <button type="button" onclick="openDeleteModal('<%= s._id || s.id %>', '<%= s.name %>')" aria-label="Delete" title="Delete">
+              <svg width="18" height="18" fill="none" stroke="currentColor" class="text-red-400 hover:text-red-600"><path d="M6 7v7m4-7v7m4-7v7M4 4h12l-1 12a2 2 0 01-2 2H7a2 2 0 01-2-2L4 4z" stroke-width="1.5"/><path d="M9 4V2a1 1 0 011-1h0a1 1 0 011 1v2" stroke-width="1.5"/></svg>
+            </button>
+          </div>
+        </div>
+
+    </div>
+  <% }) %>
+</div>
+
+<!-- Add Strategy Modal -->
+<div id="addStrategyModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+  <div class="bg-[#1e293b] p-6 rounded-lg w-full max-w-md shadow-lg border border-gray-600">
+    <h2 class="text-xl font-semibold mb-4 text-white">Add New Strategy</h2>
+    <form method="POST" id="strategyForm" action="/strategies/add">
+       <div class="mb-4">
+        <label class="block text-sm text-gray-300 mb-1">Market Type</label>
+        <select name="market_type" class="w-full bg-[#334155] border border-gray-600 rounded px-3 py-2 text-white" required>
+          <% marketList.forEach(m => { %>
+            <option value="<%= m.id %>" <%= m.id == selectedMarketId ? 'selected' : '' %>><%= m.market_name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm text-gray-300 mb-1">Name</label>
+        <input type="text" name="name" id="name" class="w-full bg-[#334155] border border-gray-600 rounded px-3 py-2 text-white" required>
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm text-gray-300 mb-1">Description</label>
+        <input type="text" name="description" id="description" class="w-full bg-[#334155] border border-gray-600 rounded px-3 py-2 text-white" required>
+      </div>
+      <div class="flex justify-end gap-3">
+        <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-600 text-white rounded">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- Edit Strategy Modal -->
+<div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+  <div class="bg-[#1e293b] p-6 rounded-lg w-full max-w-md shadow-lg border border-gray-600 relative">
+    <h2 class="text-xl font-semibold mb-4 text-white">Edit Strategy</h2>
+    <form id="editStrategyForm">
+      <input type="hidden" name="id" id="edit_id">
+<!-- Market Type -->
+<div class="mb-4">
+  <label for="edit_market_type" class="block text-sm text-gray-300 mb-1">Market Type</label>
+  <select id="edit_market_type" name="market_type" class="w-full bg-[#334155] border border-gray-600 rounded px-3 py-2 text-white" required>
+    <% marketList.forEach(m => { %>
+      <option value="<%= m.id %>"><%= m.market_name %></option>
+    <% }) %>
+  </select>
+</div>
+
+      <!-- Name -->
+      <div class="mb-4">
+        <label for="edit_name" class="block text-sm text-gray-300 mb-1">Name</label>
+        <input type="text" id="edit_name" name="name" class="w-full bg-[#334155] border border-gray-600 rounded px-3 py-2 text-white" required>
+      </div>
+
+      <!-- Description -->
+      <div class="mb-4">
+        <label for="edit_description" class="block text-sm text-gray-300 mb-1">Description</label>
+        <input type="text" id="edit_description" name="description" class="w-full bg-[#334155] border border-gray-600 rounded px-3 py-2 text-white" required>
+      </div>
+
+    
+
+      <!-- Buttons -->
+      <div class="flex justify-end gap-3">
+        <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-600 text-white rounded">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Update</button>
+      </div>
+    </form>
+
+    <!-- Close X button -->
+    <button onclick="closeEditModal()" class="absolute top-3 right-3 text-gray-300 hover:text-white text-xl">&times;</button>
+  </div>
+</div>
+
+<script>
+  function openModal() {
+    document.getElementById('addStrategyModal').classList.remove('hidden');
+  }
+
+  function closeModal() {
+    document.getElementById('addStrategyModal').classList.add('hidden');
+  }
+
+  function showToast(type, message) {
+    const toast = document.createElement('div');
+    toast.className = `px-4 py-2 rounded shadow text-white mb-2 ${type === 'success' ? 'bg-green-600' : 'bg-red-600'}`;
+    toast.textContent = message;
+    document.getElementById('toast-container').appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  }
+
+  
+
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('strategyForm');
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const nameInput = form.querySelector('#name');
+  const descInput = form.querySelector('#description');
+
+  function clearErrors() {
+    form.querySelectorAll('.input-error').forEach(e => e.remove());
+    nameInput.classList.remove('border-red-500');
+    descInput.classList.remove('border-red-500');
+  }
+
+  function showError(input, message) {
+    const err = document.createElement('div');
+    err.className = 'input-error text-red-400 text-xs mt-1';
+    err.innerText = message;
+    input.after(err);
+    input.classList.add('border-red-500');
+  }
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    clearErrors();
+
+    let hasError = false;
+
+    if (!nameInput.value.trim()) {
+      showError(nameInput, 'Strategy Name is required');
+      hasError = true;
+    }
+    if (!descInput.value.trim()) {
+      showError(descInput, 'Description is required');
+      hasError = true;
+    }
+    if (hasError) {
+      return;
+    }
+
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Saving...';
+        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+    const formData = new FormData(this);
+
+    try {
+      const res = await fetch(this.action, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      showToast(data.success ? 'success' : 'error', data.message);
+
+      if (data.success) {
+        setTimeout(() => window.location.reload(), 100);
+      } else {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Add';
+        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      showToast('error', 'Something went wrong!');
+      submitBtn.disabled = false;
+      submitBtn.innerText = 'Add';
+      submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+    }
+  });
+});
+
+  function openEditModal(id) {
+    fetch(`/strategies/api/${id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.strategy) {
+          const s = data.strategy;
+          document.getElementById('edit_id').value = s.id;
+          document.getElementById('edit_name').value = s.name;
+          document.getElementById('edit_description').value = s.description || '';
+            const marketSelect = document.getElementById('edit_market_type');
+        if (marketSelect) {
+          marketSelect.value = s.market_type; // Set the selected value
+        }
+          // Set correct form action
+          document.getElementById('editStrategyForm').action = `/strategies/edit/${s.id}`;
+          document.getElementById('editModal').classList.remove('hidden');
+        } else {
+          alert('Strategy not found');
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Error loading strategy');
+      });
+  }
+
+  function closeEditModal() {
+    document.getElementById('editModal').classList.add('hidden');
+  }
+
+document.getElementById('editStrategyForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const nameInput = form.querySelector('#edit_name');
+    const descInput = form.querySelector('#edit_description');
+
+    // Clear errors
+    form.querySelectorAll('.input-error').forEach(e => e.remove());
+    nameInput.classList.remove('border-red-500');
+    descInput.classList.remove('border-red-500');
+
+    let hasError = false;
+
+    if (!nameInput.value.trim()) {
+      showFieldError(nameInput, 'Strategy Name is required');
+      hasError = true;
+    }
+    if (!descInput.value.trim()) {
+      showFieldError(descInput, 'Description is required');
+      hasError = true;
+    }
+    if (hasError) return;
+
+    // Show loading state
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'Updating...';
+    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+    const formData = new FormData(form);
+
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+
+      showToast(data.success ? 'success' : 'error', data.message || (data.success ? 'Strategy updated' : 'Update failed'));
+
+      if (data.success) {
+        setTimeout(() => location.reload(), 100);
+      } else {
+        // Restore button
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Update';
+        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      showToast('error', 'Something went wrong!');
+      submitBtn.disabled = false;
+      submitBtn.innerText = 'Update';
+      submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+  });
+
+  function showFieldError(input, message) {
+    const err = document.createElement('div');
+    err.className = 'input-error text-red-400 text-xs mt-1';
+    err.innerText = message;
+    input.after(err);
+    input.classList.add('border-red-500');
+  }
+  function openDeleteModal(id, name) {
+  if (!confirm(`Are you sure you want to delete strategy "${name}"?`)) return;
+
+  fetch(`/strategies/delete/${id}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        showToast('success', 'Strategy deleted successfully');
+        setTimeout(() => location.reload(), 100);
+      } else {
+        showToast('error', data.message || 'Failed to delete strategy');
+      }
+    })
+    .catch(err => {
+      console.error('Delete error:', err);
+      showToast('error', 'Something went wrong!');
+    });
+}
+
+
+  </script>
+
+<%- include('../include/footer') %>

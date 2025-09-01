@@ -1,0 +1,382 @@
+<%- include('../include/header') %>
+<%- include('../include/sidebar') %>
+<style>
+  /* General text */
+  #aiReportContainer .ai-prose p { margin:.5rem 0 .8rem; }
+  #aiReportContainer .ai-prose ul,
+  #aiReportContainer .ai-prose ol { margin:.5rem 0 1rem 1.25rem; }
+  #aiReportContainer .ai-prose li { margin:.25rem 0; }
+
+  /* Headings: force h3 → h2 style, colorful background blocks */
+  #aiReportContainer .ai-prose h1,
+  #aiReportContainer .ai-prose h2,
+  #aiReportContainer .ai-prose h3 {
+    font-size:1.125rem; font-weight:700; line-height:1.4;
+    padding:.45rem .75rem; border-radius:.5rem;
+    margin:1rem 0 .75rem; color:#fff;
+  }
+
+  /* Random-ish palette for section headers */
+  #aiReportContainer .ai-prose h1:nth-of-type(1),
+  #aiReportContainer .ai-prose h2:nth-of-type(1),
+  #aiReportContainer .ai-prose h3:nth-of-type(1) { background:#1d4ed8; } /* blue */
+  #aiReportContainer .ai-prose h1:nth-of-type(2),
+  #aiReportContainer .ai-prose h2:nth-of-type(2),
+  #aiReportContainer .ai-prose h3:nth-of-type(2) { background:#9333ea; } /* purple */
+  #aiReportContainer .ai-prose h1:nth-of-type(3),
+  #aiReportContainer .ai-prose h2:nth-of-type(3),
+  #aiReportContainer .ai-prose h3:nth-of-type(3) { background:#e11d48; } /* rose */
+  #aiReportContainer .ai-prose h1:nth-of-type(4),
+  #aiReportContainer .ai-prose h2:nth-of-type(4),
+  #aiReportContainer .ai-prose h3:nth-of-type(4) { background:#16a34a; } /* green */
+  #aiReportContainer .ai-prose h1:nth-of-type(5),
+  #aiReportContainer .ai-prose h2:nth-of-type(5),
+  #aiReportContainer .ai-prose h3:nth-of-type(5) { background:#f59e0b; } /* amber */
+  /* fallback: cycle colors */
+  #aiReportContainer .ai-prose h1:nth-of-type(6n+6),
+  #aiReportContainer .ai-prose h2:nth-of-type(6n+6),
+  #aiReportContainer .ai-prose h3:nth-of-type(6n+6) { background:#0ea5e9; } /* cyan */
+  /* Strong text inside AI report */
+#aiReportContainer .ai-prose strong {
+  font-weight: 600;
+  color: #38bdf8; /* cyan accent */
+}
+
+/* Optionally rotate colors slightly to add variety */
+#aiReportContainer .ai-prose strong:nth-of-type(2n) { color: #fbbf24; } /* amber */
+#aiReportContainer .ai-prose strong:nth-of-type(3n) { color: #22c55e; } /* green */
+#aiReportContainer .ai-prose strong:nth-of-type(4n) { color: #a855f7; } /* purple */
+
+</style>
+
+
+<div class="p-6">
+
+  <% 
+    let totalInvested = 0;
+    let totalMarketValue = 0;
+    let totalPnL = 0;
+    let todayChange = 0;
+    let currencySymbol = (market_type && marketCategories.find(m => m.id == market_type)?.market_name?.toLowerCase().includes('crypto')) ? '$' : '₹';
+  %>
+  <% holdings.forEach(h => {
+    const invested = Math.round(h.quantity * h.average_price);
+    const marketValue = Math.round(h.quantity * h.last_price);
+    const pnl = Math.round(h.pnl);
+    totalInvested += invested;
+    totalMarketValue += marketValue;
+    totalPnL += pnl;
+    todayChange += Math.round(h.quantity * h.day_change);
+  }) %>
+
+  <!-- ===== Top Summary Cards ===== -->
+  <div class="grid gap-6 mb-8 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+    <!-- Today's P&L -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-5 shadow-xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-sm text-white/60">📆 TODAY’S P&L</div>
+          <div class="mt-1 text-2xl font-bold <%= todayChange >= 0 ? 'text-emerald-400' : 'text-rose-400' %>">
+            <%= todayChange >= 0 ? '▲' : '▼' %> <%= currencySymbol %><%= todayChange.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+          </div>
+        </div>
+        <div class="text-4xl <%= todayChange >= 0 ? 'text-emerald-400' : 'text-rose-400' %>">
+          <%= todayChange >= 0 ? '🚀' : '📉' %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total P&L -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-5 shadow-xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-sm text-white/60">📉 TOTAL P&L</div>
+          <div class="mt-1 text-2xl font-bold <%= totalPnL >= 0 ? 'text-emerald-400' : 'text-rose-400' %>">
+            <%= totalPnL >= 0 ? '▲' : '▼' %> <%= currencySymbol %><%= totalPnL.toLocaleString('en-IN') %>
+          </div>
+        </div>
+        <div class="text-4xl <%= totalPnL >= 0 ? 'text-emerald-400' : 'text-rose-400' %>">
+          <%= totalPnL >= 0 ? '📈' : '🔻' %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Invested Amount -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-5 shadow-xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-sm text-white/60">💰 INVESTED AMOUNT</div>
+          <div class="mt-1 text-2xl font-bold text-white">
+            <%= currencySymbol %><%= totalInvested.toLocaleString('en-IN') %>
+          </div>
+        </div>
+        <div class="text-4xl text-white">💼</div>
+      </div>
+    </div>
+
+    <!-- Market Value -->
+    <div class="bg-[#0b1220] border border-white/10 rounded-2xl p-5 shadow-xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-sm text-white/60">📊 MARKET VALUE</div>
+          <div class="mt-1 text-2xl font-bold text-white">
+            <%= currencySymbol %><%= totalMarketValue.toLocaleString('en-IN') %>
+          </div>
+        </div>
+        <div class="text-4xl text-white">🏦</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Filters + Actions ===== -->
+  <form method="GET" class="flex items-center gap-2 mb-6 flex-wrap">
+    <!-- Broker -->
+    <select name="broker" onchange="this.form.submit()"
+            class="bg-[#0b1220] border border-white/10 text-white px-3 py-2 rounded-lg text-sm">
+      <option value="">All Brokers</option>
+      <% brokerList.forEach(b => { %>
+        <option value="<%= b.id %>" <%= broker == b.id ? 'selected' : '' %>><%= b.name %></option>
+      <% }) %>
+    </select>
+
+    <!-- Market Type -->
+    <select name="market_type" onchange="this.form.submit()"
+            class="bg-[#0b1220] border border-white/10 text-white px-3 py-2 rounded-lg text-sm">
+      <% marketCategories.forEach(cat => { %>
+        <option value="<%= cat.id %>" <%= market_type == cat.id ? 'selected' : '' %>><%= cat.market_name %></option>
+      <% }) %>
+    </select>
+
+    <!-- Sync -->
+    <button id="syncHoldingsBtn" onclick="syncHoldings()"
+            class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-4 py-2 rounded-lg transition">
+      🔄 Sync Holdings
+    </button>
+
+    <!-- AI Insight -->
+    <button id="generateInsightBtn" onclick="generateInsight()"
+            class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2 rounded-lg transition">
+      🔍 Generate AI Insight
+    </button>
+
+    <!-- Export -->
+    <button type="button" id="exportBtn"
+            class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-4 py-2 rounded-lg transition">
+      📄 Export to Excel
+    </button>
+  </form>
+
+  <!-- ===== AI Report ===== -->
+<!-- ===== AI Report (clear + sectioned) ===== -->
+<div id="aiReportContainer"
+     class="hidden mt-8 rounded-2xl overflow-hidden shadow-2xl bg-[#0b1220] border border-white/10">
+
+  <!-- Header bar -->
+  <div class="sticky top-0 z-10 px-5 py-3 bg-gradient-to-r from-indigo-600/15 via-fuchsia-600/15 to-rose-600/15
+              border-b border-white/10 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-2">
+      <span class="inline-flex w-7 h-7 rounded-lg bg-indigo-500/20 text-indigo-300 items-center justify-center">🧠</span>
+      <div class="leading-tight">
+        <div class="text-sm font-semibold text-white">AI Portfolio Insight</div>
+        <div id="generatedAt" class="text-xs text-white/70">📅 Generated just now</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+     
+      <button onclick="downloadAIReport()"
+              class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs">
+        📄 Download PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div id="aiBody" class="max-h-[72vh] overflow-auto">
+    <div class="p-5 lg:p-6">
+      <div class="mb-4 flex items-start gap-3 rounded-xl bg-amber-500/10 border border-amber-500/20 p-3 text-amber-200">
+        <span class="text-lg leading-none">⚠️</span>
+        <p class="text-sm">Advisory only. Verify with live quotes before acting.</p>
+      </div>
+
+      <!-- Parsed markdown goes here -->
+      <div id="aiReportContent"
+           class="ai-prose prose-invert max-w-none text-[15px] leading-7 text-white/90"></div>
+    </div>
+  </div>
+</div>
+
+  <!-- ===== Holdings Table ===== -->
+  <% if (holdings.length === 0) { %>
+    <div class="text-white/70 bg-[#0b1220] border border-white/10 rounded-2xl p-8 text-center">
+      No holdings found.
+    </div>
+  <% } else { %>
+    <div class="overflow-x-auto bg-[#0b1220] border border-white/10 rounded-2xl shadow-xl">
+      <table id="holdingsTable" class="min-w-full text-sm text-white">
+        <thead class="sticky top-0 bg-[#0b1220] z-10 border-b border-white/10">
+          <tr class="text-left text-xs uppercase text-white/70">
+            <th class="px-4 py-3 cursor-pointer" onclick="sortTable(1)">Broker <span class="opacity-60">▲▼</span></th>
+            <th class="px-4 py-3 cursor-pointer" onclick="sortTable(0)">Symbol <span class="opacity-60">▲▼</span></th>
+            <th class="px-4 py-3 cursor-pointer" onclick="sortTable(2)">Qty <span class="opacity-60">▲▼</span></th>
+            <th class="px-4 py-3 cursor-pointer" onclick="sortTable(3)">T1 Qty <span class="opacity-60">▲▼</span></th>
+            <th class="px-4 py-3 cursor-pointer" onclick="sortTable(4)">Avg Price <span class="opacity-60">▲▼</span></th>
+            <th class="px-4 py-3 cursor-pointer" onclick="sortTable(5)">Last Price <span class="opacity-60">▲▼</span></th>
+            <th class="px-4 py-3 cursor-pointer" onclick="sortTable(6)">P&L <span class="opacity-60">▲▼</span></th>
+            <th class="px-4 py-3 cursor-pointer" onclick="sortTable(7)">Invested Amount <span class="opacity-60">▲▼</span></th>
+            <th class="px-4 py-3 cursor-pointer" onclick="sortTable(8)">Market Value <span class="opacity-60">▲▼</span></th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <% holdings.forEach(h => {
+            const invested = Math.round(h.quantity * h.average_price);
+            const marketValue = Math.round(h.quantity * h.last_price);
+            const pnl = Math.round(h.pnl);
+          %>
+            <tr class="border-b border-white/5 hover:bg-white/5 transition">
+              <td class="px-4 py-3"><%= h.Broker?.name || '-' %></td>
+              <td class="px-4 py-3 font-medium"><%= h.tradingsymbol %></td>
+              <td class="px-4 py-3"><%= h.quantity %></td>
+              <td class="px-4 py-3"><%= h.t1_quantity %></td>
+              <td class="px-4 py-3"><%= currencySymbol %><%= Math.round(h.average_price).toLocaleString('en-IN') %></td>
+              <td class="px-4 py-3"><%= currencySymbol %><%= Math.round(h.last_price).toLocaleString('en-IN') %></td>
+              <td class="px-4 py-3 <%= pnl >= 0 ? 'text-emerald-400' : 'text-rose-400' %>">
+                <%= pnl >= 0 ? '▲' : '▼' %> <%= currencySymbol %><%= pnl.toLocaleString('en-IN') %>
+              </td>
+              <td class="px-4 py-3"><%= currencySymbol %><%= invested.toLocaleString('en-IN') %></td>
+              <td class="px-4 py-3"><%= currencySymbol %><%= marketValue.toLocaleString('en-IN') %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+
+        <tfoot class="bg-white/5 text-white border-t border-white/10">
+          <tr class="font-semibold">
+            <td class="px-4 py-3" colspan="2">Total</td>
+            <td class="px-4 py-3"><%= holdings.reduce((sum, h) => sum + h.quantity, 0) %></td>
+            <td class="px-4 py-3"><%= holdings.reduce((sum, h) => sum + h.t1_quantity, 0) %></td>
+            <td class="px-4 py-3" colspan="2"></td>
+            <td class="px-4 py-3 <%= totalPnL >= 0 ? 'text-emerald-400' : 'text-rose-400' %>">
+              <%= totalPnL >= 0 ? '▲' : '▼' %> <%= currencySymbol %><%= totalPnL.toLocaleString('en-IN') %>
+            </td>
+            <td class="px-4 py-3"><%= currencySymbol %><%= totalInvested.toLocaleString('en-IN') %></td>
+            <td class="px-4 py-3"><%= currencySymbol %><%= totalMarketValue.toLocaleString('en-IN') %></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<!-- SheetJS (Excel Export) -->
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<script>
+  document.getElementById('exportBtn').addEventListener('click', function () {
+    const table = document.getElementById('holdingsTable');
+    const wb = XLSX.utils.table_to_book(table, { sheet: "Holdings" });
+    XLSX.writeFile(wb, 'holdings_export.xlsx');
+  });
+
+  // Keep your existing sort wiring (header onclick + listener). This keeps working as-is.
+  document.querySelectorAll('#holdingsTable th').forEach(header => {
+    header.addEventListener('click', () => {
+      const table = header.closest('table');
+      const index = [...header.parentNode.children].indexOf(header);
+      const rows = [...table.querySelectorAll('tbody tr')];
+      const asc = !header.classList.contains('asc');
+
+      rows.sort((a, b) => {
+        const aText = a.children[index].innerText.replace(/[^\d.-]/g, '');
+        const bText = b.children[index].innerText.replace(/[^\d.-]/g, '');
+        return asc ? aText - bText : bText - aText;
+      });
+
+      table.querySelectorAll('th').forEach(th => th.classList.remove('asc', 'desc'));
+      header.classList.add(asc ? 'asc' : 'desc');
+      const tbody = table.querySelector('tbody');
+      rows.forEach(row => tbody.appendChild(row));
+    });
+  });
+
+  function syncHoldings() {
+    const btn = document.getElementById("syncHoldingsBtn");
+    btn.disabled = true;
+    btn.innerHTML = "Syncing...";
+
+    fetch("/credentials/sync-zerodha-holdings")
+      .then(res => res.text())
+      .then(msg => {
+        Toastify({
+          text: msg,
+          duration: 3000,
+          gravity: "top",
+          position: "right",
+          backgroundColor: msg.includes("✅") ? "#22c55e" : "#ef4444",
+        }).showToast();
+
+        btn.disabled = false;
+        btn.innerHTML = "🔄 Sync Holdings";
+
+        if (msg.includes("✅")) setTimeout(() => location.reload(), 1500);
+      })
+      .catch(err => {
+        Toastify({
+          text: "❌ Error syncing holdings",
+          duration: 3000,
+          gravity: "top",
+          position: "right",
+          backgroundColor: "#ef4444",
+        }).showToast();
+        btn.disabled = false;
+        btn.innerHTML = "🔄 Sync Holdings";
+      });
+  }
+</script>
+
+<!-- AI report libs -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+  function generateInsight() {
+    const btn = document.getElementById('generateInsightBtn');
+    btn.disabled = true;
+    btn.innerText = '⏳ Generating...';
+
+    fetch('/ai/analyze-holdings')
+      .then(res => res.json())
+      .then(data => {
+        if (data.analysis) {
+          const container = document.getElementById('aiReportContainer');
+          const content = document.getElementById('aiReportContent');
+          const date = document.getElementById('generatedAt');
+
+          content.innerHTML = marked.parse(data.analysis);
+          date.innerText = `📅 Generated: ${new Date().toLocaleString()}`;
+          container.classList.remove('hidden');
+
+          Toastify({ text: "✅ AI Insight Generated", duration: 4000, gravity: "top", position: "right", backgroundColor: "#22c55e" }).showToast();
+        } else {
+          Toastify({ text: data.error, duration: 4000, gravity: "top", position: "right", backgroundColor: "orange" }).showToast();
+        }
+      })
+      .catch(err => {
+        Toastify({ text: "❌ Failed to generate AI insight", duration: 4000, gravity: "top", position: "right", backgroundColor: "#ef4444" }).showToast();
+      })
+      .finally(() => {
+        btn.disabled = false;
+        btn.innerText = '🔍 Generate AI Insight';
+      });
+  }
+
+  function downloadAIReport() {
+    const element = document.getElementById('aiReportContainer');
+    html2pdf().from(element).set({
+      margin: 0.5,
+      filename: 'AI-Holding-Insight.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    }).save();
+  }
+</script>
+
+<%- include('../include/footer') %>

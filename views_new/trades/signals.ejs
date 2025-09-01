@@ -1,0 +1,64 @@
+<%- include('../include/header') %>
+<%- include('../include/sidebar') %>
+
+<div class="px-4 py-6">
+  <h1 class="text-3xl font-bold text-white mb-8">📈 Trading Signals</h1>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <% signals.forEach(signal => { 
+      const isBuy = signal.side === 'buy';
+      const borderColor = isBuy ? 'from-green-400 to-green-600' : 'from-red-400 to-red-600';
+      const entry = parseFloat(signal.entry_price);
+      const qty = parseFloat(signal.qty || 0);
+      let profit = 0;
+
+      if (signal.tp1) profit += (parseFloat(signal.tp1) - entry) * qty;
+      if (signal.tp2) profit += (parseFloat(signal.tp2) - entry) * qty;
+      if (signal.tp3) profit += (parseFloat(signal.tp3) - entry) * qty;
+    %>
+      <div class="relative rounded-2xl p-[1px] bg-gradient-to-br <%= borderColor %> shadow-lg transition transform hover:scale-[1.015]">
+        <div class="bg-[#0f172a] rounded-2xl p-6 h-full flex flex-col justify-between">
+
+          <!-- Header -->
+          <div class="flex justify-between items-center mb-3">
+            <span class="bg-gray-700/70 text-white text-xs px-2 py-1 rounded-md">TF: <%= signal.tf %>m</span>
+            <span class="text-sm font-bold capitalize <%= isBuy ? 'text-green-400' : 'text-red-400' %>">
+              <%= isBuy ? 'Long' : 'Short' %>
+            </span>
+          </div>
+
+          <!-- Symbol and Time -->
+          <div class="mb-4">
+            <h2 class="text-xl font-semibold text-blue-400 mb-1"><%= signal.symbol %></h2>
+            <p class="text-xs text-gray-400">
+              <i class="fa-regular fa-clock mr-1"></i>
+              <%= moment(signal.entry_time).format('D MMM, YYYY h:mm A') %>
+            </p>
+          </div>
+
+          <!-- Price Info -->
+          <div class="text-sm text-gray-300 space-y-1 mb-3">
+            <div><span class="text-gray-400">Entry:</span> ₹<%= entry.toFixed(2) %></div>
+            <% if (signal.sl) { %>
+              <div><span class="text-gray-400">Stop Loss:</span> <span class="text-red-400">₹<%= parseFloat(signal.sl).toFixed(2) %></span></div>
+            <% } %>
+            <% if (signal.tp1) { %>
+              <div><span class="text-gray-400">TP1:</span> <span class="text-green-400">₹<%= parseFloat(signal.tp1).toFixed(2) %></span></div>
+            <% } %>
+            <% if (signal.tp2) { %>
+              <div><span class="text-gray-400">TP2:</span> <span class="text-green-400">₹<%= parseFloat(signal.tp2).toFixed(2) %></span></div>
+            <% } %>
+            <% if (signal.tp3) { %>
+              <div><span class="text-gray-400">TP3:</span> <span class="text-green-400">₹<%= parseFloat(signal.tp3).toFixed(2) %></span></div>
+            <% } %>
+          </div>
+
+       
+
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</div>
+
+<%- include('../include/footer') %>

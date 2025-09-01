@@ -1,0 +1,114 @@
+<%- include('../include/header') %>
+<%- include('../include/sidebar') %>
+
+<!-- User List Card -->
+<div class="card shadow-sm rounded m-4 animate__animated animate__fadeIn">
+  <!-- Card Header -->
+  <div class="card-header border-bottom-1 pb-2">
+  <div class="row w-100 align-items-center">
+    <div class="col-md-6">
+      <h3 class="card-title fw-bold fs-4 mb-0">
+        <i class="fas fa-users text-primary me-2"></i> User List
+      </h3>
+     </div>
+    <div class="col-md-6 text-end">
+      <a href="/admin/users/add" class="btn btn-sm btn-primary rounded-pill">
+        <i class="fas fa-user-plus me-1"></i> Add User
+      </a>
+    </div>
+  </div>
+</div>
+
+  <!-- Card Body -->
+  <div class="card-body ">
+    <table id="usersTable" class="table table-hover table-striped table-bordered align-middle text-center mt-3">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (users.length === 0) { %>
+          <tr>
+            <td colspan="6" class="text-center">No users found</td>
+          </tr>
+        <% } %>
+        <% users.forEach((user, index) => { %>
+          <tr>
+            <td><%= index + 1 %></td>
+            <td><%= user.full_name %></td>
+            <td><%= user.email %></td>
+            <td><%= user.phone %></td>
+            <td>
+              <% if (user.status === 'ACTIVE') { %>
+                <span class="badge rounded-pill bg-success px-3 py-1">Active</span>
+              <% } else { %>
+                <span class="badge rounded-pill bg-danger px-3 py-1">Inactive</span>
+              <% } %>
+            </td>
+            <td>
+              <a href="/admin/users/edit/<%= user.user_id%>" class="btn btn-sm btn-warning rounded-circle me-1" data-bs-toggle="tooltip" title="Edit User">
+                <i class="fas fa-pencil-alt"></i>
+              </a>
+              <a href="/admin/users/delete/<%= user.user_id %>" class="btn btn-sm btn-danger rounded-circle" data-bs-toggle="tooltip" title="Delete User" onclick="return confirm('Are you sure?')">
+                <i class="fas fa-trash-alt"></i>
+              </a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Custom Styling -->
+<style>
+  .dataTables_filter input {
+    border-radius: 20px;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+  }
+
+  .dt-buttons .btn {
+    margin-right: 5px;
+    border-radius: 20px !important;
+    padding: 5px 12px !important;
+    font-weight: 500;
+  }
+
+  .btn-sm i {
+    font-size: 0.9rem;
+  }
+
+  .table td {
+    vertical-align: middle;
+  }
+</style>
+
+<!-- DataTables Initialization -->
+<script>
+  $(document).ready(function () {
+    $('#usersTable').DataTable({
+      responsive: true,
+      lengthChange: true,
+      pageLength: 10,
+      dom: 'Bfrtip',
+      buttons: [
+        { extend: 'copyHtml5', className: 'btn btn-sm btn-dark' },
+        { extend: 'excelHtml5', className: 'btn btn-sm btn-success' },
+        { extend: 'csvHtml5', className: 'btn btn-sm btn-info' },
+        { extend: 'pdfHtml5', className: 'btn btn-sm btn-danger' }
+      ]
+    });
+
+    // Bootstrap tooltip activation
+    $('[data-bs-toggle="tooltip"]').tooltip();
+  });
+</script>
+
+<%- include('../include/footer') %>

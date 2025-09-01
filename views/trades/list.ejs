@@ -1,0 +1,462 @@
+<%- include('../include/header') %>
+<%- include('../include/sidebar') %>
+
+<!-- Header with Market / Month / Year Filters -->
+<div class="flex justify-between items-center mb-6">
+  <h1 class="text-2xl font-semibold">Trade History</h1>
+  <form method="GET" class="flex gap-2 items-center">
+    <!-- Market -->
+    <select name="market" onchange="this.form.submit()"
+      class="bg-[#1e293b] text-white border border-gray-600 text-sm px-3 py-2 rounded-md">
+      <% marketList.forEach(m => { %>
+        <option value="<%= m.id %>" <%= market == m.id ? 'selected' : '' %>><%= m.market_name %></option>
+      <% }) %>
+    </select>
+
+    <!-- Month -->
+    <select name="month" onchange="this.form.submit()"
+      class="bg-[#1e293b] text-white border border-gray-600 text-sm px-3 py-2 rounded-md">
+      <% for (let m = 0; m < 12; m++) { %>
+        <option value="<%= m %>" <%= m == month ? 'selected' : '' %>>
+          <%= new Date(2000, m).toLocaleString('default', { month: 'long' }) %>
+        </option>
+      <% } %>
+    </select>
+
+    <!-- Year -->
+    <select name="year" onchange="this.form.submit()"
+      class="bg-[#1e293b] text-white border border-gray-600 text-sm px-3 py-2 rounded-md">
+      <% for (let y = 2024; y <= 2030; y++) { %>
+        <option value="<%= y %>" <%= y == year ? 'selected' : '' %>><%= y %></option>
+      <% } %>
+    </select>
+  </form>
+</div>
+
+<div class="bg-[#1e293b] p-4 md:p-6 rounded-lg">
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+    <h2 class="text-xl font-semibold">&nbsp;</h2>
+    <div class="flex flex-wrap gap-2">
+      <button class="bg-[#334155] px-3 py-1 rounded text-sm flex items-center gap-2"><i class="fas fa-sync-alt"></i> Sync broker</button>
+      <a href="/trades/add" class="bg-blue-500 px-4 py-1 rounded text-sm text-white">+ New Trade</a>
+
+      <!-- AI Insight Button -->
+      <button id="generateInsightBtn" onclick="generateInsight()" class="bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2 rounded-md transition-all">
+        🔍 Generate AI Insight
+      </button>
+    </div>
+  </div>
+
+  <!-- AI Report Display -->
+  <div id="aiReportContainer" class="mt-10 hidden bg-[#1e293b] border border-gray-600 rounded-xl p-6 mb-8">
+    <div class="flex justify-between items-center mb-3 text-sm text-gray-400">
+      <span id="generatedAt">📅 Generated just now</span>
+      <button onclick="downloadAIReport()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">
+        📄 Download PDF
+      </button>
+    </div>
+    <div id="aiReportContent" class="prose prose-invert prose-sm max-w-none whitespace-pre-wrap text-white"></div>
+  </div>
+
+  <!-- ========= Filters ========= -->
+  <div class="mb-4 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
+    <input id="fltSymbol" type="text" placeholder="🔎 Symbol"
+      class="bg-[#0f172a] text-white border border-gray-600 text-sm px-3 py-2 rounded-md placeholder-gray-400">
+
+    <select id="fltDirection" class="bg-[#0f172a] text-white border border-gray-600 text-sm px-3 py-2 rounded-md">
+      <option value="">Direction: All</option>
+      <option value="Long">Long</option>
+      <option value="Short">Short</option>
+    </select>
+
+    <select id="fltStrategy" class="bg-[#0f172a] text-white border border-gray-600 text-sm px-3 py-2 rounded-md">
+      <option value="">Strategy: All</option>
+    </select>
+
+    <select id="fltOutcome" class="bg-[#0f172a] text-white border border-gray-600 text-sm px-3 py-2 rounded-md">
+      <option value="">Outcome: All</option>
+    </select>
+
+    <!-- single visible range picker -->
+    <input id="fltDateRange" type="text" placeholder="📅 Date range"
+      class="bg-[#0f172a] text-white border border-gray-600 text-sm px-3 py-2 rounded-md placeholder-gray-400" />
+
+    <!-- hidden fields used by filter logic (auto-filled by flatpickr) -->
+    <input id="fltDateFrom" type="hidden">
+    <input id="fltDateTo" type="hidden">
+  </div>
+
+  <div class="mb-6 grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-3">
+    <input id="fltPLMin" type="number" step="0.01" placeholder="P/L min"
+      class="bg-[#0f172a] text-white border border-gray-600 text-sm px-3 py-2 rounded-md placeholder-gray-400">
+    <input id="fltPLMax" type="number" step="0.01" placeholder="P/L max"
+      class="bg-[#0f172a] text-white border border-gray-600 text-sm px-3 py-2 rounded-md placeholder-gray-400">
+    <input id="fltPctMin" type="number" step="0.01" placeholder="% min"
+      class="bg-[#0f172a] text-white border border-gray-600 text-sm px-3 py-2 rounded-md placeholder-gray-400">
+    <input id="fltPctMax" type="number" step="0.01" placeholder="% max"
+      class="bg-[#0f172a] text-white border border-gray-600 text-sm px-3 py-2 rounded-md placeholder-gray-400">
+
+    <button id="fltApply" type="button" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-2 rounded-md">Apply Filters</button>
+    <button id="fltReset" type="button" class="bg-gray-600 hover:bg-gray-700 text-white text-sm px-3 py-2 rounded-md">Reset</button>
+  </div>
+  <!-- ========= /Filters ========= -->
+
+  <!-- Trade Table -->
+  <div class="overflow-x-auto">
+    <table id="tradeTable" class="w-full text-sm text-left text-white min-w-[800px]">
+      <thead class="text-xs text-gray-400 uppercase border-b border-gray-600">
+        <tr>
+          <th class="px-4 py-2 cursor-pointer select-none" data-sort="date">Date <span class="opacity-60" data-sort-indicator>⇅</span></th>
+          <th class="px-4 py-2 cursor-pointer select-none" data-sort="symbol">Symbol <span class="opacity-60" data-sort-indicator>⇅</span></th>
+          <th class="px-4 py-2 cursor-pointer select-none" data-sort="direction">Direction <span class="opacity-60" data-sort-indicator>⇅</span></th>
+          <th class="px-4 py-2">Entry/Exit</th>
+          <th class="px-4 py-2 cursor-pointer select-none" data-sort="pl">P/L ( / %) <span class="opacity-60" data-sort-indicator>⇅</span></th>
+          <th class="px-4 py-2 cursor-pointer select-none" data-sort="rr">Risk/Reward <span class="opacity-60" data-sort-indicator>⇅</span></th>
+          <th class="px-4 py-2 cursor-pointer select-none" data-sort="strategy">Strategy <span class="opacity-60" data-sort-indicator>⇅</span></th>
+          <th class="px-4 py-2 cursor-pointer select-none" data-sort="outcome">Outcome <span class="opacity-60" data-sort-indicator>⇅</span></th>
+          <th class="px-4 py-2">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <% if (trades.length === 0) { %>
+          <tr>
+            <td colspan="9" class="text-center py-6 text-gray-400">No trades found.</td>
+          </tr>
+        <% } %>
+
+        <% trades.forEach(trade => { 
+            const entry = parseFloat(trade.entry_price || 0);
+            const exit = parseFloat(trade.exit_price || 0);
+            const direction = trade.trade_type == 1 ? 'Long' : 'Short';
+            const isProfit = (direction === 'Long') ? (exit > entry) : (entry > exit);
+            const pl = (direction === 'Long') ? (exit - entry) : (entry - exit);
+            const plPct = entry > 0 ? ((pl / entry) * 100) : 0;
+            const rr = Number(parseFloat(trade.target) / parseFloat(trade.stop_loss || 1));
+            const isoDate = moment(trade.datetime).format('YYYY-MM-DD');
+            const strategyName = (trade?.Strategy?.name || '—');
+            const outcomeLabel = (trade?.Outcome?.label || '—');
+        %>
+          <tr class="border-b border-gray-700"
+              data-date="<%= isoDate %>"
+              data-symbol="<%= (trade.symbol || '').toLowerCase() %>"
+              data-direction="<%= direction %>"
+              data-strategy="<%= strategyName %>"
+              data-outcome="<%= outcomeLabel %>"
+              data-pl="<%= pl %>"
+              data-plpct="<%= plPct %>"
+              data-rr="<%= isFinite(rr) ? rr : 0 %>">
+            <td class="px-4 py-2" data-value="<%= isoDate %>"><%= moment(trade.datetime).format('DD-MM-YYYY') %></td>
+            <td class="px-4 py-2" data-value="<%= (trade.symbol || '').toLowerCase() %>"><%= trade.symbol %></td>
+            <td class="px-4 py-2" data-value="<%= direction %>">
+              <span class="<%= direction === 'Long' ? 'bg-green-600' : 'bg-red-600' %> text-white px-2 py-1 rounded text-xs">
+                <%= direction %>
+              </span>
+            </td>
+            <td class="px-4 py-2">
+              <%= trade.entry_price %><br/>
+              <%= trade.exit_price %>
+            </td>
+            <td class="px-4 py-2 <%= isProfit ? 'text-green-400' : 'text-red-400' %>" data-value="<%= pl %>">
+              <%= (pl >= 0 ? '+' : '') %><%= pl.toFixed(2) %><br/>
+              <span class="text-xs"><%= (plPct >= 0 ? '+' : '') %><%= plPct.toFixed(2) %>%</span>
+            </td>
+            <td class="px-4 py-2" data-value="<%= isFinite(rr) ? rr : 0 %>">
+              <span class="bg-yellow-500 px-2 py-1 text-xs rounded">
+                1:<%= isFinite(rr) ? rr.toFixed(2) : '0.00' %>
+              </span>
+            </td>
+            <td class="px-4 py-2" data-value="<%= strategyName %>"><%= strategyName %></td>
+            <td class="px-4 py-2" data-value="<%= outcomeLabel %>">
+              <% if (trade.Outcome) { %>
+                <span class="bg-green-600 text-xs px-2 py-1 rounded"><%= outcomeLabel %></span>
+              <% } else { %>
+                <span class="bg-gray-600 text-xs px-2 py-1 rounded">—</span>
+              <% } %>
+            </td>
+            <td class="px-4 py-2 flex gap-2">
+              <a href="/trades/edit/<%= trade.id %>" class=" bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded"><i class="fas fa-edit"></i></a>
+              <button type="button" class="deleteTradeBtn bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded" data-id="<%= trade.id %>">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+<%
+  const qsParts = [];
+  if (typeof market !== 'undefined' && market) qsParts.push(`market=${encodeURIComponent(market)}`);
+  if (typeof month !== 'undefined' && month)   qsParts.push(`month=${encodeURIComponent(month)}`);
+  if (typeof year !== 'undefined' && year)     qsParts.push(`year=${encodeURIComponent(year)}`);
+  const extraQS = qsParts.length ? '&' + qsParts.join('&') : '';
+%>
+
+<!-- Pagination -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4 text-sm text-gray-400 gap-2">
+  <div id="showingStats">Showing <%= showingStart %>–<%= showingEnd %> of <%= totalCount %> trades</div>
+  <div class="flex gap-2">
+    <% if (currentPage > 1) { %>
+      <a href="?page=<%= currentPage - 1 %><%= extraQS %>" class="bg-[#334155] px-2 py-1 rounded">&lt;</a>
+    <% } else { %>
+      <span class="bg-gray-700 px-2 py-1 rounded opacity-50 cursor-not-allowed">&lt;</span>
+    <% } %>
+
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <% if (i === currentPage) { %>
+        <span class="bg-blue-600 px-3 py-1 rounded"><%= i %></span>
+      <% } else { %>
+        <a href="?page=<%= i %><%= extraQS %>" class="bg-[#334155] px-3 py-1 rounded hover:bg-blue-500"><%= i %></a>
+      <% } %>
+    <% } %>
+
+    <% if (currentPage < totalPages) { %>
+      <a href="?page=<%= currentPage + 1 %><%= extraQS %>" class="bg-[#334155] px-2 py-1 rounded">&gt;</a>
+    <% } else { %>
+      <span class="bg-gray-700 px-2 py-1 rounded opacity-50 cursor-not-allowed">&gt;</span>
+    <% } %>
+  </div>
+</div>
+
+</div>
+
+<!-- libs for AI report (existing) -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<!-- Flatpickr (datepicker) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+  // ======== Delete trade (existing) ========
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.deleteTradeBtn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const tradeId = btn.getAttribute('data-id');
+        if (!confirm('Are you sure you want to delete this trade?')) return;
+
+        try {
+          const res = await fetch(`/trades/delete/${tradeId}`, { method: 'GET' });
+          const data = await res.json();
+
+          if (data.success) {
+            Toastify({ text: "✅ " + data.message, duration: 3000, gravity: "top", position: "right", backgroundColor: "#22c55e" }).showToast();
+            setTimeout(() => location.reload(), 800);
+          } else {
+            throw new Error(data.message || 'Failed to delete.');
+          }
+        } catch (err) {
+          Toastify({ text: "❌ " + err.message, duration: 4000, gravity: "top", position: "right", backgroundColor: "#ef4444" }).showToast();
+        }
+      });
+    });
+  });
+
+  // ======== AI Insight (existing) ========
+  function generateInsight() {
+    const btn = document.getElementById('generateInsightBtn');
+    btn.disabled = true;
+    btn.innerText = '⏳ Generating...';
+
+    fetch('/ai/analyze-trades')
+      .then(res => res.json())
+      .then(data => {
+        if (data.analysis) {
+          const container = document.getElementById('aiReportContainer');
+          const content = document.getElementById('aiReportContent');
+          const date = document.getElementById('generatedAt');
+
+          content.innerHTML = marked.parse(data.analysis);
+          date.innerText = `📅 Generated: ${new Date().toLocaleString()}`;
+          container.classList.remove('hidden');
+
+          Toastify({ text: "✅ AI Insight Generated", duration: 4000, gravity: "top", position: "right", backgroundColor: "#22c55e" }).showToast();
+        } else {
+          Toastify({ text: data.error, duration: 4000, gravity: "top", position: "right", backgroundColor: "orange" }).showToast();
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        Toastify({ text: "❌ Failed to generate AI insight", duration: 4000, gravity: "top", position: "right", backgroundColor: "#ef4444" }).showToast();
+      })
+      .finally(() => {
+        btn.disabled = false;
+        btn.innerText = '🔍 Generate AI Insight';
+      });
+  }
+
+  function downloadAIReport() {
+    const element = document.getElementById('aiReportContainer');
+    html2pdf().from(element).set({
+      margin: 0.5,
+      filename: 'AI-Holding-Insight.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    }).save();
+  }
+
+  // ======== Sorting & Filtering (fixed) ========
+  document.addEventListener('DOMContentLoaded', () => {
+    const table   = document.getElementById('tradeTable');
+    const tbody   = table.querySelector('tbody');
+    const headers = table.querySelectorAll('thead th[data-sort]');
+
+    const fltSymbol    = document.getElementById('fltSymbol');
+    const fltDirection = document.getElementById('fltDirection');
+    const fltStrategy  = document.getElementById('fltStrategy');
+    const fltOutcome   = document.getElementById('fltOutcome');
+    const fltDateFrom  = document.getElementById('fltDateFrom');
+    const fltDateTo    = document.getElementById('fltDateTo');
+    const fltDateRange = document.getElementById('fltDateRange');
+    const fltPLMin     = document.getElementById('fltPLMin');
+    const fltPLMax     = document.getElementById('fltPLMax');
+    const fltPctMin    = document.getElementById('fltPctMin');
+    const fltPctMax    = document.getElementById('fltPctMax');
+    const fltApply     = document.getElementById('fltApply');
+    const fltReset     = document.getElementById('fltReset');
+    const showingStats = document.getElementById('showingStats');
+
+    // ---- Datepicker (flatpickr range) ----
+    const fp = flatpickr(fltDateRange, {
+      mode: 'range',
+      dateFormat: 'Y-m-d',
+      onChange: (selectedDates) => {
+        // keep hidden fields updated for filter logic
+        if (selectedDates.length === 2) {
+          const [start, end] = selectedDates;
+          fltDateFrom.value = fp.formatDate(start, 'Y-m-d');
+          fltDateTo.value   = fp.formatDate(end, 'Y-m-d');
+        } else if (selectedDates.length === 1) {
+          const [start] = selectedDates;
+          fltDateFrom.value = fp.formatDate(start, 'Y-m-d');
+          fltDateTo.value   = '';
+        } else {
+          fltDateFrom.value = '';
+          fltDateTo.value   = '';
+        }
+      }
+    });
+
+    // ---- Populate Strategy & Outcome dropdowns ----
+    const strategies = new Set();
+    const outcomes   = new Set();
+    Array.from(tbody.querySelectorAll('tr[data-date]')).forEach(tr => {
+      const s = tr.getAttribute('data-strategy') || '—';
+      const o = tr.getAttribute('data-outcome') || '—';
+      if (s && s !== '—') strategies.add(s);
+      if (o && o !== '—') outcomes.add(o);
+    });
+    [...strategies].sort().forEach(s => fltStrategy.appendChild(new Option(s, s)));
+    [...outcomes].sort().forEach(o => fltOutcome.appendChild(new Option(o, o)));
+
+    // ---- Sorting ----
+    let sortState = { key: null, dir: 1 }; // 1 asc, -1 desc
+    function comparator(key, dir) {
+      return (a, b) => {
+        const va = a.getAttribute('data-' + key) ?? '';
+        const vb = b.getAttribute('data-' + key) ?? '';
+        if (['pl','plpct','rr'].includes(key)) {
+          const na = parseFloat(va) || 0, nb = parseFloat(vb) || 0;
+          return (na - nb) * dir;
+        }
+        if (key === 'date') {
+          return (va > vb ? 1 : va < vb ? -1 : 0) * dir;
+        }
+        const ta = String(va).toLowerCase(), tb = String(vb).toLowerCase();
+        return (ta > tb ? 1 : ta < tb ? -1 : 0) * dir;
+      };
+    }
+    function applySort(key) {
+      const rows = Array.from(tbody.querySelectorAll('tr[data-date]')).filter(r => r.style.display !== 'none');
+      if (sortState.key === key) sortState.dir = -sortState.dir; else { sortState.key = key; sortState.dir = 1; }
+      rows.sort(comparator(key, sortState.dir));
+      rows.forEach(r => tbody.appendChild(r));
+      headers.forEach(h => h.querySelector('[data-sort-indicator]').textContent = '⇅');
+      const active = Array.from(headers).find(h => h.getAttribute('data-sort') === key);
+      if (active) active.querySelector('[data-sort-indicator]').textContent = sortState.dir === 1 ? '↑' : '↓';
+    }
+    headers.forEach(h => h.addEventListener('click', () => applySort(h.getAttribute('data-sort'))));
+
+    // ---- Filtering ----
+    function inRange(val, min, max) {
+      if (min !== '' && !isNaN(min) && val < Number(min)) return false;
+      if (max !== '' && !isNaN(max) && val > Number(max)) return false;
+      return true;
+    }
+
+    function applyFilters() {
+      const sym   = fltSymbol.value.trim().toLowerCase();
+      const dir   = fltDirection.value;
+      const strat = fltStrategy.value;
+      const outc  = fltOutcome.value;
+      const dFrom = fltDateFrom.value; // YYYY-MM-DD
+      const dTo   = fltDateTo.value;
+
+      const plMin = fltPLMin.value, plMax = fltPLMax.value;
+      const pctMin= fltPctMin.value, pctMax= fltPctMax.value;
+
+      const rows = Array.from(tbody.querySelectorAll('tr[data-date]'));
+      let visibleCount = 0;
+
+      rows.forEach(tr => {
+        const tSym = tr.getAttribute('data-symbol') || '';
+        const tDir = tr.getAttribute('data-direction') || '';
+        const tStr = tr.getAttribute('data-strategy') || '';
+        const tOut = tr.getAttribute('data-outcome') || '';
+        const tDate= tr.getAttribute('data-date') || '';
+        const tPL  = parseFloat(tr.getAttribute('data-pl')) || 0;
+        const tPct = parseFloat(tr.getAttribute('data-plpct')) || 0;
+
+        let ok = true;
+        if (sym && !tSym.includes(sym)) ok = false;
+        if (dir && tDir !== dir) ok = false;
+        if (strat && tStr !== strat) ok = false;
+        if (outc && tOut !== outc) ok = false;
+        if (dFrom && tDate < dFrom) ok = false;
+        if (dTo && tDate > dTo) ok = false;
+        if (!inRange(tPL, plMin, plMax)) ok = false;
+        if (!inRange(tPct, pctMin, pctMax)) ok = false;
+
+        tr.style.display = ok ? '' : 'none';
+        if (ok) visibleCount++;
+      });
+
+      if (showingStats) showingStats.textContent = `Showing ${visibleCount} of <%= totalCount %> trades (filtered)`;
+
+      // maintain sort on visible rows
+      if (sortState.key) applySort(sortState.key);
+    }
+
+    // Wire up listeners (fixed)
+    let symTimer = null;
+    fltSymbol.addEventListener('input', () => { clearTimeout(symTimer); symTimer = setTimeout(applyFilters, 200); });
+    [fltDirection, fltStrategy, fltOutcome].forEach(el => el.addEventListener('change', applyFilters));
+    [fltPLMin, fltPLMax, fltPctMin, fltPctMax].forEach(el => el.addEventListener('input', applyFilters));
+    fltApply.addEventListener('click', applyFilters);
+
+    fltReset.addEventListener('click', () => {
+      fltSymbol.value    = '';
+      fltDirection.value = '';
+      fltStrategy.value  = '';
+      fltOutcome.value   = '';
+      fltPLMin.value     = '';
+      fltPLMax.value     = '';
+      fltPctMin.value    = '';
+      fltPctMax.value    = '';
+      fp.clear(); // clears visible range and hidden from/to
+      fltDateFrom.value = '';
+      fltDateTo.value   = '';
+
+      Array.from(tbody.querySelectorAll('tr[data-date]')).forEach(tr => tr.style.display = '');
+      if (showingStats) showingStats.textContent = `Showing <%= showingStart %>–<%= showingEnd %> of <%= totalCount %> trades`;
+      // reset sort indicators
+      headers.forEach(h => h.querySelector('[data-sort-indicator]').textContent = '⇅');
+      sortState = { key: null, dir: 1 };
+    });
+  });
+</script>
+
+<%- include('../include/footer') %>

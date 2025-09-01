@@ -1,0 +1,111 @@
+<%- include('../include/header') %>
+<%- include('../include/sidebar') %>
+
+<style>
+  /* General text inside AI report */
+  #reportContent .ai-prose p { margin:.5rem 0 .8rem; }
+  #reportContent .ai-prose ul,
+  #reportContent .ai-prose ol { margin:.5rem 0 1rem 1.25rem; }
+  #reportContent .ai-prose li { margin:.25rem 0; }
+
+  /* Headings: treat h3 as h2 and style nicely */
+  #reportContent .ai-prose h1,
+  #reportContent .ai-prose h2,
+  #reportContent .ai-prose h3 {
+    font-size:1.125rem; font-weight:700; line-height:1.4;
+    margin:1rem 0 .75rem;
+    padding:.35rem .65rem;
+    border-left:4px solid #38bdf8;
+    background:rgba(56,189,248,.1);
+    border-radius:.25rem;
+    color:#38bdf8;
+  }
+
+  /* Strong text highlight */
+  #reportContent .ai-prose strong {
+    font-weight:600;
+    color:#fbbf24; /* amber */
+  }
+  #reportContent .ai-prose strong:nth-of-type(2n){ color:#22c55e; } /* green */
+  #reportContent .ai-prose strong:nth-of-type(3n){ color:#a855f7; } /* purple */
+  #reportContent .ai-prose strong:nth-of-type(4n){ color:#38bdf8; } /* cyan */
+</style>
+
+<div class="content-wrapper bg-[#0f172a] text-white min-h-screen p-6">
+  <!-- Hero Header -->
+  <div class="bg-gradient-to-r from-blue-700 to-purple-700 rounded-xl p-6 mb-6 shadow-lg">
+    <h1 class="text-3xl font-bold text-white flex items-center gap-2">
+      📊 AI Trade/Holding Analysis
+    </h1>
+    <p class="text-sm text-gray-200 mt-1">
+      Smart portfolio review powered by AI – get risk, health & diversification insights.
+    </p>
+  </div>
+
+  <% if (!report) { %>
+    <div class="bg-[#1e293b] rounded-lg p-6 text-gray-400 shadow-md">
+      No analysis report available yet.
+    </div>
+  <% } else { %>
+    <!-- Report Card -->
+    <div id="reportContent" class="bg-[#1e293b] rounded-2xl shadow-xl p-8 border border-blue-500/30 transition duration-300 hover:shadow-2xl">
+      <div class="flex justify-between text-sm text-gray-400 mb-4">
+        <span>🕒 Generated: <%= new Date(report.created_at).toLocaleString() %></span>
+        <div class="flex gap-2">
+          <button id="toggleReportBtn"
+                  class="px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-white text-xs border border-white/10">
+            Expand
+          </button>
+          <button onclick="downloadPDF()"
+                  class="bg-gradient-to-r from-sky-600 to-blue-700 hover:from-sky-700 hover:to-blue-800 text-white px-5 py-2 rounded-full shadow-md transition text-sm">
+            📥 Download as PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- Markdown Content -->
+      <div id="reportBody" class="max-h-[70vh] overflow-auto ai-prose prose prose-sm prose-invert max-w-none leading-relaxed space-y-4">
+        <%- report.html %>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../include/footer') %>
+
+<!-- PDF Export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+  function downloadPDF() {
+    const element = document.getElementById('reportContent');
+    const opt = {
+      margin: 0.5,
+      filename: 'AI-Holding-Report.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+    html2pdf().from(element).set(opt).save();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('toggleReportBtn');
+    const body = document.getElementById('reportBody');
+    if (!btn || !body) return;
+
+    let expanded = false;
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      expanded = !expanded;
+      if (expanded) {
+        body.classList.remove('max-h-[70vh]');
+        body.classList.add('max-h-none');
+        btn.textContent = 'Collapse';
+      } else {
+        body.classList.remove('max-h-none');
+        body.classList.add('max-h-[70vh]');
+        btn.textContent = 'Expand';
+      }
+    });
+  });
+</script>

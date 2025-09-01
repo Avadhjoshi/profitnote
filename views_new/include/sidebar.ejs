@@ -1,0 +1,242 @@
+<!-- ============ Sidebar + Topbar (Tailwind + Alpine) ============ -->
+<!-- Ensure a parent has x-data="{ open:false }" (e.g., <div x-data="{ open:false }">) -->
+
+<!-- Mobile Header -->
+<header class="md:hidden sticky top-0 z-50 bg-[#0b1220] border-b border-white/10">
+  <div class="px-4 h-14 flex items-center justify-between">
+    <button
+      @click="open = true"
+      aria-label="Open menu"
+      aria-controls="pp-sidebar"
+      :aria-expanded="open ? 'true' : 'false'"
+      class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+    >
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <a href="/dashboard" class="flex items-center gap-2">
+      <div class="bg-white text-black rounded-lg w-8 h-8 grid place-items-center font-extrabold">PP</div>
+      <span class="text-[15px] font-semibold tracking-wide text-[#38bdf8]">ProfitPhase</span>
+    </a>
+
+    <a href="/trades/add"
+       class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 px-3 py-2 rounded-lg text-sm font-medium">
+      <i class="fas fa-plus"></i><span>Trade</span>
+    </a>
+  </div>
+</header>
+
+<!-- Sidebar Drawer (mobile) + Rail (desktop) -->
+<aside
+  id="pp-sidebar"
+  x-cloak
+  class="fixed md:sticky md:top-0 md:h-[100vh] z-40 inset-y-0 left-0 w-[18rem]
+         bg-gradient-to-b from-[#0b1220] to-[#0a1220] border-r border-white/10
+         transform transition-transform duration-300 ease-in-out
+         -translate-x-full md:translate-x-0"
+  :class="{ 'translate-x-0': open }"
+  role="navigation" aria-label="Main"
+>
+  <!-- Brand -->
+  <div class="px-5 pt-5 pb-3 flex items-center justify-between">
+    <a href="/dashboard" class="flex items-center gap-3">
+      <div class="bg-white text-black rounded-xl w-9 h-9 grid place-items-center font-extrabold">PP</div>
+      <div>
+        <div class="text-sm font-semibold leading-tight">ProfitPhase</div>
+        <div class="text-[11px] text-white/60 -mt-0.5">Smarter insights</div>
+      </div>
+    </a>
+    <button @click="open=false" class="md:hidden w-9 h-9 grid place-items-center rounded-lg bg-white/5 hover:bg-white/10" aria-label="Close menu">
+      <i class="fas fa-times text-white/80"></i>
+    </button>
+  </div>
+
+  <!-- Search -->
+  <div class="px-4">
+    <div class="relative">
+      <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-xs"></i>
+      <input type="text" placeholder="Search…"
+             class="w-full pl-9 pr-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="mt-4 px-3 pb-6 overflow-y-auto h-[calc(100vh-160px)] md:h-[calc(100vh-140px)]">
+    <!-- Section: Overview -->
+    <p class="px-2 text-[11px] uppercase tracking-wider text-white/40 mt-3 mb-2">Overview</p>
+
+    <a href="/dashboard"
+       class="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-1 transition
+              <%= activePage === 'dashboard' ? 'bg-gradient-to-r from-indigo-600 to-blue-700 text-white shadow-lg' : 'text-white/80 hover:bg-white/5' %>">
+      <i class="fas fa-home text-base"></i>
+      <span class="text-[15px]">Dashboard</span>
+    </a>
+
+    <a href="/trades"
+       class="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-1 transition
+              <%= activePage === 'trades' ? 'bg-gradient-to-r from-indigo-600 to-blue-700 text-white shadow-lg' : 'text-white/80 hover:bg-white/5' %>">
+      <i class="fas fa-exchange-alt text-base"></i>
+      <span class="text-[15px]">Trades</span>
+    </a>
+
+    <a href="/holdings"
+       class="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-1 transition
+              <%= activePage === 'holdings' ? 'bg-gradient-to-r from-indigo-600 to-blue-700 text-white shadow-lg' : 'text-white/80 hover:bg-white/5' %>">
+      <i class="fas fa-briefcase text-base"></i>
+      <span class="text-[15px]">Holdings</span>
+    </a>
+
+    <a href="/reports"
+       class="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-1 transition
+              <%= activePage === 'reports' ? 'bg-gradient-to-r from-indigo-600 to-blue-700 text-white shadow-lg' : 'text-white/80 hover:bg-white/5' %>">
+      <i class="fas fa-chart-bar text-base"></i>
+      <span class="text-[15px]">Reports</span>
+    </a>
+
+    <!-- Section: Planning -->
+    <p class="px-2 text-[11px] uppercase tracking-wider text-white/40 mt-4 mb-2">Planning</p>
+
+    <a href="/strategies"
+       class="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-1 transition
+              <%= activePage === 'strategies' ? 'bg-gradient-to-r from-indigo-600 to-blue-700 text-white shadow-lg' : 'text-white/80 hover:bg-white/5' %>">
+      <i class="fas fa-lightbulb text-base"></i>
+      <span class="text-[15px]">Strategies</span>
+    </a>
+
+    <a href="/calendar"
+       class="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-1 transition
+              <%= activePage === 'calendar' ? 'bg-gradient-to-r from-indigo-600 to-blue-700 text-white shadow-lg' : 'text-white/80 hover:bg-white/5' %>">
+      <i class="fas fa-calendar-alt text-base"></i>
+      <span class="text-[15px]">Calendar</span>
+    </a>
+
+    <!-- Section: Growth -->
+    <p class="px-2 text-[11px] uppercase tracking-wider text-white/40 mt-4 mb-2">Growth</p>
+
+    <a href="/signals"
+       class="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-1 transition relative
+              <%= activePage === 'signals' ? 'bg-gradient-to-r from-indigo-600 to-blue-700 text-white shadow-lg' : 'text-white/80 hover:bg-white/5' %>">
+      <i class="fas fa-signal text-base"></i>
+      <span class="text-[15px]">Signals</span>
+      <span class="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-emerald-600/20 text-emerald-300 border border-emerald-500/20">New</span>
+    </a>
+
+    <a href="/affiliate"
+       class="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-1 transition
+              <%= activePage === 'affiliate' ? 'bg-gradient-to-r from-indigo-600 to-blue-700 text-white shadow-lg' : 'text-white/80 hover:bg-white/5' %>">
+      <i class="fas fa-user-friends text-base"></i>
+      <span class="text-[15px]">Affiliate</span>
+    </a>
+
+    <a href="/tutorials"
+       class="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-1 transition
+              <%= activePage === 'tutorials' ? 'bg-gradient-to-r from-indigo-600 to-blue-700 text-white shadow-lg' : 'text-white/80 hover:bg-white/5' %>">
+      <i class="fas fa-graduation-cap text-base"></i>
+      <span class="text-[15px]">Tutorials</span>
+    </a>
+
+    <a href="/credentials"
+       class="flex items-center gap-3 px-4 py-2.5 rounded-xl mb-1 transition
+              <%= activePage === 'broker' ? 'bg-gradient-to-r from-indigo-600 to-blue-700 text-white shadow-lg' : 'text-white/80 hover:bg-white/5' %>">
+      <i class="fas fa-plug text-base"></i>
+      <span class="text-[15px]">Connect Broker</span>
+    </a>
+
+    <!-- Collapsible: Chart Analyzer -->
+    <div
+      x-data="{ openDropdown: <%= (activePage === 'chart_analyzer' || activePage === 'chart_history' || activePage === 'ai-reports' || activePage === 'ai-trade-reports') ? 'true' : 'false' %> }"
+      class="mt-2"
+    >
+      <button @click="openDropdown = !openDropdown"
+              class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition
+                     <%= (activePage === 'chart_analyzer' || activePage === 'chart_history' || activePage === 'ai-reports' || activePage === 'ai-trade-reports')
+                         ? 'bg-gradient-to-r from-indigo-600 to-blue-700 text-white shadow-lg'
+                         : 'text-white/80 hover:bg-white/5' %>">
+        <span class="flex items-center gap-3">
+          <i class="fas fa-chart-line text-base"></i>
+          <span class="text-[15px]">Chart Analyzer</span>
+        </span>
+        <i class="fas fa-chevron-down text-xs transition-transform" :class="openDropdown ? 'rotate-180' : 'rotate-0'"></i>
+      </button>
+
+      <div x-show="openDropdown" x-collapse class="mt-2 space-y-1 pl-10" x-cloak>
+        <a href="/chart-analyzer"
+           class="block px-3 py-2 rounded-lg text-sm
+                  <%= activePage === 'chart_analyzer' ? 'bg-white/10 text-white' : 'text-white/80 hover:bg-white/5' %>">
+          <i class="fas fa-bolt text-xs mr-2"></i> Analyze Chart
+        </a>
+        <a href="/chart-history"
+           class="block px-3 py-2 rounded-lg text-sm
+                  <%= activePage === 'chart_history' ? 'bg-white/10 text-white' : 'text-white/80 hover:bg-white/5' %>">
+          <i class="fas fa-history text-xs mr-2"></i> Chart Analyze History
+        </a>
+        <a href="/ai-reports"
+           class="block px-3 py-2 rounded-lg text-sm
+                  <%= activePage === 'ai-reports' ? 'bg-white/10 text-white' : 'text-white/80 hover:bg-white/5' %>">
+          <i class="fas fa-brain text-xs mr-2"></i> Holding Analyze History
+        </a>
+        <a href="/ai-trade-reports"
+           class="block px-3 py-2 rounded-lg text-sm
+                  <%= activePage === 'ai-trade-reports' ? 'bg-white/10 text-white' : 'text-white/80 hover:bg-white/5' %>">
+          <i class="fas fa-chart-pie text-xs mr-2"></i> Trade Analyze History
+        </a>
+      </div>
+    </div>
+
+    <!-- Version -->
+    <div class="mt-6 mx-4 p-3 rounded-xl bg-white/5 border border-white/10">
+      <div class="text-[11px] text-white/60">Version</div>
+      <div class="text-xs font-medium">ProfitPhase v1.3.0</div>
+    </div>
+  </nav>
+</aside>
+
+<!-- Mobile overlay (click to close) -->
+<div x-show="open" x-transition.opacity
+     class="fixed inset-0 bg-black/60 z-30 md:hidden" @click="open=false" x-cloak></div>
+
+<!-- ======= Top Command Bar (desktop) ======= -->
+<div class="hidden md:block sticky top-0 z-40 bg-[#0b1220]/80 backdrop-blur border-b border-white/10">
+  <div class="px-6 h-14 flex items-center justify-between">
+    <!-- Left: breadcrumb -->
+    <div class="flex items-center gap-3 min-w-0">
+      <button
+        @click="open = !open"
+        aria-controls="pp-sidebar"
+        :aria-expanded="open ? 'true' : 'false'"
+        class="w-9 h-9 grid place-items-center rounded-lg bg-white/5 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        aria-label="Toggle sidebar"
+      >
+        <i class="fas fa-bars text-white/80"></i>
+      </button>
+      <div class="text-sm text-white/70 truncate">
+        <span class="text-white/90 font-medium"><%= 'Dashboard' %></span>
+        <span class="mx-2 text-white/30">/</span>
+        <span class="text-white/50"><%= 'Overview' %></span>
+      </div>
+    </div>
+
+    <!-- Right: actions -->
+    <div class="flex items-center gap-3">
+      <a href="/trades/add" class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center gap-2">
+        <i class="fas fa-plus"></i> New Trade
+      </a>
+
+      <!-- User Menu -->
+      <div x-data="{ show:false }" class="relative">
+        <button @click="show = !show" class="flex items-center gap-2 rounded-lg px-2 py-1 hover:bg-white/5">
+          <div class="bg-white text-black w-8 h-8 grid place-items-center rounded-full font-bold">
+            <%= user?.name?.charAt(0).toUpperCase() || 'U' %>
+          </div>
+          <span class="text-sm"><%= user?.name || 'User' %></span>
+          <i class="fas fa-chevron-down text-xs text-white/70"></i>
+        </button>
+        <div x-show="show" x-transition @click.away="show=false" x-cloak
+             class="absolute right-0 mt-2 w-48 bg-[#0f172a] border border-white/10 text-white rounded-lg shadow-2xl overflow-hidden">
+          <a href="/profile" class="block px-4 py-2 hover:bg-white/5 text-sm">Profile</a>
+          <a href="/logout" class="block px-4 py-2 text-red-400 hover:bg-white/5 text-sm">Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
