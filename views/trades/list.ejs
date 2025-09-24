@@ -2,30 +2,37 @@
 <%- include('../include/sidebar') %>
 
 <!-- Header with Market / Month / Year Filters -->
-<div class="flex justify-between items-center mb-6">
-  <h1 class="text-2xl font-semibold">Trade History</h1>
-  <form method="GET" class="flex gap-2 items-center">
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6">
+  <!-- Title -->
+  <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Trade History</h1>
+
+  <!-- Filters -->
+  <form method="GET"
+        class="flex flex-nowrap sm:flex-wrap items-center gap-2 overflow-x-auto sm:overflow-visible -mx-1 px-1">
     <!-- Market -->
-    <select name="market" onchange="this.form.submit()"
-      class="bg-[#1e293b] text-white border border-gray-600 text-sm px-3 py-2 rounded-md">
+    <label class="sr-only" for="market">Market</label>
+    <select id="market" name="market" onchange="this.form.submit()"
+      class="min-w-[100px] h-10 px-3 rounded-md bg-[#1e293b] text-white text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-600">
       <% marketList.forEach(m => { %>
         <option value="<%= m.id %>" <%= market == m.id ? 'selected' : '' %>><%= m.market_name %></option>
       <% }) %>
     </select>
 
     <!-- Month -->
-    <select name="month" onchange="this.form.submit()"
-      class="bg-[#1e293b] text-white border border-gray-600 text-sm px-3 py-2 rounded-md">
+    <label class="sr-only" for="month">Month</label>
+    <select id="month" name="month" onchange="this.form.submit()"
+      class="min-w-[100px] h-10 px-3 rounded-md bg-[#1e293b] text-white text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-600">
       <% for (let m = 0; m < 12; m++) { %>
         <option value="<%= m %>" <%= m == month ? 'selected' : '' %>>
-          <%= new Date(2000, m).toLocaleString('default', { month: 'long' }) %>
+          <%= new Date(2000, m).toLocaleString('default', { month: 'short' }) %>
         </option>
       <% } %>
     </select>
 
     <!-- Year -->
-    <select name="year" onchange="this.form.submit()"
-      class="bg-[#1e293b] text-white border border-gray-600 text-sm px-3 py-2 rounded-md">
+    <label class="sr-only" for="year">Year</label>
+    <select id="year" name="year" onchange="this.form.submit()"
+      class="min-w-[100px] h-10 px-3 rounded-md bg-[#1e293b] text-white text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-600">
       <% for (let y = 2024; y <= 2030; y++) { %>
         <option value="<%= y %>" <%= y == year ? 'selected' : '' %>><%= y %></option>
       <% } %>
@@ -50,12 +57,13 @@
   <!-- AI Report Display -->
   <div id="aiReportContainer" class="mt-10 hidden bg-[#1e293b] border border-gray-600 rounded-xl p-6 mb-8">
     <div class="flex justify-between items-center mb-3 text-sm text-gray-400">
-      <span id="generatedAt">📅 Generated just now</span>
+      <span id="generatedAt">Generated just now</span>
       <button onclick="downloadAIReport()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">
-        📄 Download PDF
+        Download PDF
       </button>
     </div>
-    <div id="aiReportContent" class="prose prose-invert prose-sm max-w-none whitespace-pre-wrap text-white"></div>
+    <!-- IMPORTANT: added ai-prose class -->
+    <div id="aiReportContent" class="prose ai-prose prose-invert prose-sm max-w-none whitespace-pre-wrap text-white"></div>
   </div>
 
   <!-- ========= Filters ========= -->
@@ -77,11 +85,8 @@
       <option value="">Outcome: All</option>
     </select>
 
-    <!-- single visible range picker -->
     <input id="fltDateRange" type="text" placeholder="📅 Date range"
       class="bg-[#0f172a] text-white border border-gray-600 text-sm px-3 py-2 rounded-md placeholder-gray-400" />
-
-    <!-- hidden fields used by filter logic (auto-filled by flatpickr) -->
     <input id="fltDateFrom" type="hidden">
     <input id="fltDateTo" type="hidden">
   </div>
@@ -185,6 +190,7 @@
       </tbody>
     </table>
   </div>
+
 <%
   const qsParts = [];
   if (typeof market !== 'undefined' && market) qsParts.push(`market=${encodeURIComponent(market)}`);
@@ -230,7 +236,7 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <script>
-  // ======== Delete trade (existing) ========
+  // Delete trade
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.deleteTradeBtn').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -254,7 +260,7 @@
     });
   });
 
-  // ======== AI Insight (existing) ========
+  // AI Insight
   function generateInsight() {
     const btn = document.getElementById('generateInsightBtn');
     btn.disabled = true;
@@ -269,7 +275,7 @@
           const date = document.getElementById('generatedAt');
 
           content.innerHTML = marked.parse(data.analysis);
-          date.innerText = `📅 Generated: ${new Date().toLocaleString()}`;
+          date.innerText = `Generated: ${new Date().toLocaleString()}`;
           container.classList.remove('hidden');
 
           Toastify({ text: "✅ AI Insight Generated", duration: 4000, gravity: "top", position: "right", backgroundColor: "#22c55e" }).showToast();
@@ -291,14 +297,14 @@
     const element = document.getElementById('aiReportContainer');
     html2pdf().from(element).set({
       margin: 0.5,
-      filename: 'AI-Holding-Insight.pdf',
+      filename: 'AI-Trades-Insight.pdf',
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2 },
       jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
     }).save();
   }
 
-  // ======== Sorting & Filtering (fixed) ========
+  // Sorting & Filtering (unchanged from your version)
   document.addEventListener('DOMContentLoaded', () => {
     const table   = document.getElementById('tradeTable');
     const tbody   = table.querySelector('tbody');
@@ -319,12 +325,10 @@
     const fltReset     = document.getElementById('fltReset');
     const showingStats = document.getElementById('showingStats');
 
-    // ---- Datepicker (flatpickr range) ----
     const fp = flatpickr(fltDateRange, {
       mode: 'range',
       dateFormat: 'Y-m-d',
       onChange: (selectedDates) => {
-        // keep hidden fields updated for filter logic
         if (selectedDates.length === 2) {
           const [start, end] = selectedDates;
           fltDateFrom.value = fp.formatDate(start, 'Y-m-d');
@@ -340,7 +344,6 @@
       }
     });
 
-    // ---- Populate Strategy & Outcome dropdowns ----
     const strategies = new Set();
     const outcomes   = new Set();
     Array.from(tbody.querySelectorAll('tr[data-date]')).forEach(tr => {
@@ -352,8 +355,7 @@
     [...strategies].sort().forEach(s => fltStrategy.appendChild(new Option(s, s)));
     [...outcomes].sort().forEach(o => fltOutcome.appendChild(new Option(o, o)));
 
-    // ---- Sorting ----
-    let sortState = { key: null, dir: 1 }; // 1 asc, -1 desc
+    let sortState = { key: null, dir: 1 };
     function comparator(key, dir) {
       return (a, b) => {
         const va = a.getAttribute('data-' + key) ?? '';
@@ -362,9 +364,7 @@
           const na = parseFloat(va) || 0, nb = parseFloat(vb) || 0;
           return (na - nb) * dir;
         }
-        if (key === 'date') {
-          return (va > vb ? 1 : va < vb ? -1 : 0) * dir;
-        }
+        if (key === 'date') return (va > vb ? 1 : va < vb ? -1 : 0) * dir;
         const ta = String(va).toLowerCase(), tb = String(vb).toLowerCase();
         return (ta > tb ? 1 : ta < tb ? -1 : 0) * dir;
       };
@@ -380,19 +380,17 @@
     }
     headers.forEach(h => h.addEventListener('click', () => applySort(h.getAttribute('data-sort'))));
 
-    // ---- Filtering ----
     function inRange(val, min, max) {
       if (min !== '' && !isNaN(min) && val < Number(min)) return false;
       if (max !== '' && !isNaN(max) && val > Number(max)) return false;
       return true;
     }
-
     function applyFilters() {
       const sym   = fltSymbol.value.trim().toLowerCase();
       const dir   = fltDirection.value;
       const strat = fltStrategy.value;
       const outc  = fltOutcome.value;
-      const dFrom = fltDateFrom.value; // YYYY-MM-DD
+      const dFrom = fltDateFrom.value;
       const dTo   = fltDateTo.value;
 
       const plMin = fltPLMin.value, plMax = fltPLMax.value;
@@ -425,19 +423,16 @@
       });
 
       if (showingStats) showingStats.textContent = `Showing ${visibleCount} of <%= totalCount %> trades (filtered)`;
-
-      // maintain sort on visible rows
       if (sortState.key) applySort(sortState.key);
     }
 
-    // Wire up listeners (fixed)
     let symTimer = null;
     fltSymbol.addEventListener('input', () => { clearTimeout(symTimer); symTimer = setTimeout(applyFilters, 200); });
     [fltDirection, fltStrategy, fltOutcome].forEach(el => el.addEventListener('change', applyFilters));
     [fltPLMin, fltPLMax, fltPctMin, fltPctMax].forEach(el => el.addEventListener('input', applyFilters));
-    fltApply.addEventListener('click', applyFilters);
+    document.getElementById('fltApply').addEventListener('click', applyFilters);
 
-    fltReset.addEventListener('click', () => {
+    document.getElementById('fltReset').addEventListener('click', () => {
       fltSymbol.value    = '';
       fltDirection.value = '';
       fltStrategy.value  = '';
@@ -446,17 +441,82 @@
       fltPLMax.value     = '';
       fltPctMin.value    = '';
       fltPctMax.value    = '';
-      fp.clear(); // clears visible range and hidden from/to
+      fp.clear();
       fltDateFrom.value = '';
       fltDateTo.value   = '';
-
       Array.from(tbody.querySelectorAll('tr[data-date]')).forEach(tr => tr.style.display = '');
       if (showingStats) showingStats.textContent = `Showing <%= showingStart %>–<%= showingEnd %> of <%= totalCount %> trades`;
-      // reset sort indicators
       headers.forEach(h => h.querySelector('[data-sort-indicator]').textContent = '⇅');
       sortState = { key: null, dir: 1 };
     });
   });
 </script>
+
+<style>
+  /* ===== FORCE our styles to win over Tailwind Typography defaults ===== */
+
+  /* Headings inside the AI report */
+  .ai-prose h3{
+    margin-top: 1.25rem !important;
+    margin-bottom: .75rem !important;
+    font-size: 1.125rem !important;
+    line-height: 1.5rem !important;
+    font-weight: 800 !important;
+    letter-spacing: .01em !important;
+    color:#fff !important;
+    position: relative !important;
+    padding-left: .875rem !important;
+  }
+  .ai-prose h3::before{
+    content:'' !important;
+    position:absolute !important;
+    left:0; top:.15rem; bottom:.15rem !important;
+    width:4px !important;
+    border-radius:999px !important;
+    background: linear-gradient(180deg,#3b82f6 0%, #6366f1 100%) !important;
+    opacity:.9 !important;
+  }
+
+  /* Only top-level UL becomes a clean grid */
+  .ai-prose.prose > ul{
+    list-style: none !important;
+    margin: .25rem 0 1rem 0 !important;
+    padding: 0 !important;
+    display: grid !important;
+    gap: .6rem !important;
+  }
+
+  /* Card look for ONLY direct child LI of the root UL */
+  .ai-prose.prose > ul > li{
+    list-style: none !important;
+    padding: .85rem 1rem !important;
+    background: rgba(255,255,255,.04) !important;
+    border: 1px solid rgba(148,163,184,.16) !important;
+    border-radius: .75rem !important;
+    box-shadow: 0 4px 14px rgba(2,6,23,.25) !important;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease !important;
+  }
+  .ai-prose.prose > ul > li:hover{
+    transform: translateY(-2px) !important;
+    border-color: rgba(99,102,241,.45) !important;
+    box-shadow: 0 8px 20px rgba(2,6,23,.35) !important;
+  }
+
+  /* Nested lists stay plain */
+  .ai-prose ul ul{
+    list-style: disc !important;
+    margin: .5rem 0 .25rem 1.25rem !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+  .ai-prose ul ul > li{
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    padding: .25rem 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+</style>
 
 <%- include('../include/footer') %>

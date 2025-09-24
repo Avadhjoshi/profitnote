@@ -1,37 +1,42 @@
 <%- include('../include/header') %>
 <%- include('../include/sidebar') %>
 
-<div class="flex justify-between items-center mb-6">
-  <h1 class="text-2xl font-semibold">Reports</h1>
- <form method="GET" class="flex gap-2 items-center">
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6">
+  <!-- Title -->
+  <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Reports</h1>
+
+  <!-- Filters -->
+  <form method="GET"
+        class="flex flex-nowrap sm:flex-wrap items-center gap-2 overflow-x-auto sm:overflow-visible -mx-1 px-1">
     <!-- Market -->
-    <select name="market" onchange="this.form.submit()"
-      class="bg-[#1e293b] border border-gray-700 text-sm px-3 py-1 rounded-md text-white">
+    <label class="sr-only" for="market">Market</label>
+    <select id="market" name="market" onchange="this.form.submit()"
+      class="min-w-[100px] h-10 px-3 rounded-md bg-[#1e293b] text-white text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-600">
       <% marketList.forEach(m => { %>
         <option value="<%= m.id %>" <%= market == m.id ? 'selected' : '' %>><%= m.market_name %></option>
       <% }) %>
     </select>
 
     <!-- Month -->
-    <select name="month" onchange="this.form.submit()"
-      class="bg-[#1e293b] border border-gray-700 text-sm px-3 py-1 rounded-md text-white">
+    <label class="sr-only" for="month">Month</label>
+    <select id="month" name="month" onchange="this.form.submit()"
+      class="min-w-[100px] h-10 px-3 rounded-md bg-[#1e293b] text-white text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-600">
       <% for (let m = 0; m < 12; m++) { %>
         <option value="<%= m %>" <%= month == m ? 'selected' : '' %>>
-          <%= new Date(2000, m).toLocaleString('default', { month: 'long' }) %>
+          <%= new Date(2000, m).toLocaleString('default', { month: 'short' }) %>
         </option>
       <% } %>
     </select>
 
     <!-- Year -->
-    <select name="year" onchange="this.form.submit()"
-      class="bg-[#1e293b] border border-gray-700 text-sm px-3 py-1 rounded-md text-white">
+    <label class="sr-only" for="year">Year</label>
+    <select id="year" name="year" onchange="this.form.submit()"
+      class="min-w-[100px] h-10 px-3 rounded-md bg-[#1e293b] text-white text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-600">
       <% for (let y = 2023; y <= 2030; y++) { %>
         <option value="<%= y %>" <%= year == y ? 'selected' : '' %>><%= y %></option>
       <% } %>
     </select>
   </form>
-
-
 </div>
 
 

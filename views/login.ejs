@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ProfitNote — Sign In</title>
+  <title>Profitphase.io — Sign In</title>
 
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -44,7 +44,7 @@
     }
   </style>
 </head>
-<body class="min-h-screen text-white bg-animate">
+<body class="min-h-[100svh] text-white bg-animate overflow-x-hidden lg:overflow-hidden">
 
   <!-- Toasts -->
   <% if (typeof success !== 'undefined' && success && success.length) { %>
@@ -74,7 +74,7 @@
             <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 grid place-items-center shadow-lg shadow-indigo-500/25">
               <i class="fa-solid fa-chart-line text-white"></i>
             </div>
-            <span class="text-xl font-semibold tracking-wide">ProfitNote</span>
+            <span class="text-xl font-semibold tracking-wide">Profitphase.io</span>
           </a>
 
           <div>
@@ -86,20 +86,21 @@
             </p>
           </div>
 
-          <div class="grid sm:grid-cols-3 gap-4 text-sm">
-            <div class="rounded-2xl p-4 bg-white/5 ring-1 ring-white/10 backdrop-blur">
-              <div class="font-semibold">99.95% Uptime</div>
-              <div class="text-gray-400 mt-1">Reliable sync</div>
+         <div class="grid sm:grid-cols-3 gap-4 text-sm">
+              <div class="rounded-2xl p-4 bg-white/5 ring-1 ring-white/10 backdrop-blur">
+                <div class="font-semibold">Broker Sync</div>
+                <div class="text-gray-400 mt-1">Zerodha, Dhan, Angel One ,Delta exchange india</div>
+              </div>
+              <div class="rounded-2xl p-4 bg-white/5 ring-1 ring-white/10 backdrop-blur">
+                <div class="font-semibold">AI Trade Coach</div>
+                <div class="text-gray-400 mt-1">Smarter insights, fewer mistakes</div>
+              </div>
+              <div class="rounded-2xl p-4 bg-white/5 ring-1 ring-white/10 backdrop-blur">
+                <div class="font-semibold">Deep Analytics</div>
+                <div class="text-gray-400 mt-1">Performance & strategy stats</div>
+              </div>
             </div>
-            <div class="rounded-2xl p-4 bg-white/5 ring-1 ring-white/10 backdrop-blur">
-              <div class="font-semibold">1200+ Symbols</div>
-              <div class="text-gray-400 mt-1">Crypto, FX, Commodities</div>
-            </div>
-            <div class="rounded-2xl p-4 bg-white/5 ring-1 ring-white/10 backdrop-blur">
-              <div class="font-semibold">AI Insights</div>
-              <div class="text-gray-400 mt-1">Reduce mistakes</div>
-            </div>
-          </div>
+
 
           <div class="hidden lg:flex items-center gap-4 text-sm text-gray-400">
             <i class="fa-solid fa-shield-halved text-green-400"></i> 2FA Security

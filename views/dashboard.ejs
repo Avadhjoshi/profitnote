@@ -4,40 +4,52 @@
 <!-- ====== Page Shell ====== -->
 <div class="pb-10">
 
-  <!-- ====== Sticky Filter Bar ====== -->
-  <div class="sticky top-0 z-30 backdrop-blur bg-black/30 border-b border-white/10">
-    <div class="px-4 md:px-6 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-      <h1 class="text-xl md:text-2xl font-semibold tracking-tight">Dashboard</h1>
+<!-- Header / Filters -->
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6">
+  <!-- Title -->
+  <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Dashboard</h1>
 
-      <form method="GET" class="flex flex-wrap gap-2 items-center">
-        <!-- Market -->
-        <select name="market" onchange="this.form.submit()"
-          class="bg-[#0b1220] text-white border border-white/10 text-sm px-3 py-2 rounded-lg hover:border-indigo-500/50 focus:outline-none focus:ring-2 focus:ring-indigo-600">
-          <% marketList.forEach(m => { %>
-            <option value="<%= m.id %>" <%= market == m.id ? 'selected' : '' %>><%= m.market_name %></option>
-          <% }) %>
-        </select>
+  <!-- Filters -->
+  <form method="GET"
+        class="flex flex-nowrap sm:flex-wrap items-center gap-2 overflow-x-auto sm:overflow-visible -mx-1 px-1">
+    <!-- Market -->
+    <label class="sr-only" for="market">Market</label>
+    <select id="market" name="market" onchange="this.form.submit()"
+      class="min-w-[100px] h-10 px-3 rounded-md bg-[#1e293b] text-white text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+      <% marketList.forEach(m => { %>
+        <option value="<%= m.id %>" <%= market == m.id ? 'selected' : '' %>><%= m.market_name %></option>
+      <% }) %>
+    </select>
 
-        <!-- Month -->
-        <select name="month" onchange="this.form.submit()"
-          class="bg-[#0b1220] text-white border border-white/10 text-sm px-3 py-2 rounded-lg hover:border-indigo-500/50 focus:outline-none focus:ring-2 focus:ring-indigo-600">
-          <% for (let m = 0; m < 12; m++) { %>
-            <option value="<%= m %>" <%= m == month ? 'selected' : '' %>>
-              <%= new Date(2000, m).toLocaleString('default', { month: 'long' }) %>
-            </option>
-          <% } %>
-        </select>
+    <!-- Month -->
+    <label class="sr-only" for="month">Month</label>
+    <select id="month" name="month" onchange="this.form.submit()"
+      class="min-w-[100px] h-10 px-3 rounded-md bg-[#1e293b] text-white text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+      <% for (let m = 0; m < 12; m++) { %>
+        <option value="<%= m %>" <%= m == month ? 'selected' : '' %>>
+          <%= new Date(2000, m).toLocaleString('default', { month: 'short' }) %>
+        </option>
+      <% } %>
+    </select>
 
-        <!-- Year -->
-        <select name="year" onchange="this.form.submit()"
-          class="bg-[#0b1220] text-white border border-white/10 text-sm px-3 py-2 rounded-lg hover:border-indigo-500/50 focus:outline-none focus:ring-2 focus:ring-indigo-600">
-          <% for (let y = 2024; y <= 2030; y++) { %>
-            <option value="<%= y %>" <%= y == year ? 'selected' : '' %>><%= y %></option>
-          <% } %>
-        </select>
-      </form>
-    </div>
-  </div>
+    <!-- Year -->
+    <label class="sr-only" for="year">Year</label>
+    <select id="year" name="year" onchange="this.form.submit()"
+      class="min-w-[100px] h-10 px-3 rounded-md bg-[#1e293b] text-white text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+      <% for (let y = 2024; y <= 2030; y++) { %>
+        <option value="<%= y %>" <%= y == year ? 'selected' : '' %>><%= y %></option>
+      <% } %>
+    </select>
+  </form>
+</div>
+
+<!-- Tailwind Reusable Class (apply plugin / @layer components) -->
+<style>
+  .filter-select {
+    @apply bg-[#0b1220] text-white border border-white/10 px-3 py-2 rounded-lg 
+           hover:border-indigo-500/50 focus:outline-none focus:ring-2 focus:ring-indigo-600;
+  }
+</style>
 
   <!-- ====== AI Trade Coach Trigger Card ====== -->
   <div x-data="aiCoach()" class="px-4 md:px-6 pt-6">

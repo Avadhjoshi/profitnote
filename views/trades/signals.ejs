@@ -2,7 +2,10 @@
 <%- include('../include/sidebar') %>
 
 <div class="px-4 py-6">
-  <h1 class="text-3xl font-bold text-white mb-8">📈 Trading Signals</h1>
+ <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6">
+  <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Trading Signals</h1>
+
+</div>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
     <% signals.forEach(signal => { 

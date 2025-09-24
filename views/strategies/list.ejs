@@ -1,23 +1,34 @@
 <%- include('../include/header') %>
 <%- include('../include/sidebar') %>
 
-<div class="flex justify-between items-center mb-6">
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6">
+  <!-- Toast container -->
   <div id="toast-container" class="fixed top-6 right-6 z-50 space-y-2"></div>
-  <h1 class="text-2xl font-semibold">Strategies</h1>
-  <div class="flex gap-2 items-center">
-  <!-- Market Filter -->
-<form method="GET" id="marketFilterForm">
-  <select name="market" onchange="document.getElementById('marketFilterForm').submit()" 
-          class="bg-[#1e293b] border border-gray-700 text-sm text-white px-3 py-1 rounded-md">
-    <% marketList.forEach(m => { %>
-      <option value="<%= m.id %>" <%= selectedMarketId == m.id ? 'selected' : '' %>>
-        <%= m.market_name %>
-      </option>
-    <% }) %>
-  </select>
-</form>
 
-    <button type="button" onclick="openModal()" class="bg-blue-600 text-white px-4 py-1 text-sm rounded-md">+ New Strategy</button>
+  <!-- Title -->
+  <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Strategies</h1>
+
+  <!-- Filters & Button -->
+  <div class="flex flex-nowrap sm:flex-wrap items-center gap-2 overflow-x-auto sm:overflow-visible -mx-1 px-1">
+    <!-- Market Filter -->
+    <form method="GET" id="marketFilterForm">
+      <label class="sr-only" for="market">Market</label>
+      <select id="market" name="market" onchange="document.getElementById('marketFilterForm').submit()"
+        class="min-w-[120px] h-10 px-3 rounded-md bg-[#1e293b] text-white text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+        <% marketList.forEach(m => { %>
+          <option value="<%= m.id %>" <%= selectedMarketId == m.id ? 'selected' : '' %>>
+            <%= m.market_name %>
+          </option>
+        <% }) %>
+      </select>
+    </form>
+
+    <!-- New Strategy Button -->
+    <button type="button"
+      onclick="openModal()"
+      class="h-10 px-4 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+      + New Strategy
+    </button>
   </div>
 </div>
 

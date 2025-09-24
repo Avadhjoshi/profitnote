@@ -4,10 +4,12 @@
 <div class="content-wrapper bg-[#0f172a] text-white min-h-screen p-6">
   <!-- Hero Header -->
   <div class="bg-gradient-to-r from-blue-700 to-purple-700 rounded-xl p-6 mb-6 shadow-lg">
-    <h1 class="text-3xl font-bold text-white flex items-center gap-2">
-      📊 AI Trade/Holding Analysis
+    <h1 class="text-3xl font-bold text-white">
+      AI Trade/Holding Analysis
     </h1>
-    <p class="text-sm text-gray-200 mt-1">Smart portfolio review powered by AI – get risk, health & diversification insights.</p>
+    <p class="text-sm text-gray-200 mt-1">
+      Smart portfolio review powered by AI – get risk, health & diversification insights.
+    </p>
   </div>
 
   <% if (!report) { %>
@@ -16,11 +18,13 @@
     </div>
   <% } else { %>
     <!-- Report Card -->
-    <div id="reportContent" class="bg-[#1e293b] rounded-2xl shadow-xl p-8 border border-blue-500/30 transition duration-300 hover:shadow-2xl">
+    <div id="reportContent"
+         class="bg-[#1e293b] rounded-2xl shadow-xl p-8 border border-blue-500/30 transition duration-300 hover:shadow-2xl">
       <div class="flex justify-between text-sm text-gray-400 mb-4">
-        <span>🕒 Generated: <%= new Date(report.created_at).toLocaleString() %></span>
-        <button onclick="downloadPDF()" class="bg-gradient-to-r from-sky-600 to-blue-700 hover:from-sky-700 hover:to-blue-800 text-white px-5 py-2 rounded-full shadow-md transition text-sm">
-          📥 Download as PDF
+        <span>Generated: <%= new Date(report.created_at).toLocaleString() %></span>
+        <button onclick="downloadPDF()"
+                class="bg-gradient-to-r from-sky-600 to-blue-700 hover:from-sky-700 hover:to-blue-800 text-white px-5 py-2 rounded-full shadow-md transition text-sm">
+          Download as PDF
         </button>
       </div>
 
@@ -49,3 +53,42 @@
     html2pdf().from(element).set(opt).save();
   }
 </script>
+
+<!-- ✨ Custom styling for <strong> and <li> -->
+<style>
+  /* Subtle underline for <strong> */
+  .prose strong {
+    position: relative;
+    font-weight: 600;
+    color: #93c5fd; /* light blue */
+    padding-bottom: 1px;
+  }
+  .prose strong::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, #3b82f6 0%, #6366f1 100%);
+    opacity: 0.7;
+    border-radius: 2px;
+  }
+
+  /* Stylish card design for each <li> */
+  .prose li {
+    list-style: none; /* remove default bullet */
+    margin: 0.5rem 0;
+    padding: 0.75rem 1rem;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 0.75rem; /* rounded-lg */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .prose li:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+    border-color: rgba(147,197,253,0.4); /* blue-300 glow */
+  }
+</style>

@@ -13,7 +13,9 @@
     "connect-flash": "^0.1.1",
     "connect-session-sequelize": "^7.1.7",
     "cors": "^2.8.5",
+    "csv-parse": "^6.1.0",
     "dhanhq": "^1.0.6",
+    "didyoumean2": "^7.0.4",
     "dotenv": "^16.6.1",
     "ejs": "^3.1.10",
     "express": "^4.21.2",
@@ -23,13 +25,17 @@
     "jsonwebtoken": "^9.0.2",
     "kiteconnect": "^5.1.0",
     "marked": "^16.1.2",
+    "md5": "^2.3.0",
     "multer": "^2.0.2",
     "mysql2": "^3.14.2",
+    "node-nlp": "^5.0.0-alpha.5",
     "openai": "^5.11.0",
     "otplib": "^12.0.1",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "sequelize": "^6.37.7",
-    "smartapi-javascript": "^1.0.27"
+    "smartapi-javascript": "^1.0.27",
+    "string-similarity": "^4.0.4",
+    "undici": "^7.16.0"
   }
 }

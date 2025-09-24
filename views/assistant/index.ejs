@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>ProfitPhase Assistant</title>
+
+<!-- Tailwind + Poppins font -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Poppins', 'ui-sans-serif', 'system-ui', '-apple-system',
+               'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', 'sans-serif']
+      },
+      colors: { primary: "#4f46e5", ink: "#0f172a" },
+      boxShadow: { soft: "0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.06)" }
+    }
+  }
+};
+</script>
+
+<style>
+.scrollbar-hide::-webkit-scrollbar{display:none}
+.pulse{animation:pulse 1.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(79,70,229,.6)}
+70%{box-shadow:0 0 0 16px rgba(79,70,229,0)}
+100%{box-shadow:0 0 0 0 rgba(79,70,229,0)}}
+.conv-active{background:#eef2ff !important;color:#111827;font-weight:600}
+
+/* Bubble wrapping + width cap */
+.pp-bubble{
+  width:fit-content;
+  max-width:min(85vw,720px);
+  word-break:break-word;
+  overflow-wrap:anywhere;
+  white-space:pre-wrap; /* keep markdown newlines */
+}
+@media (min-width:640px){ .pp-bubble{ max-width:min(75vw,720px); } }
+@media (min-width:1024px){ .pp-bubble{ max-width:48rem; } }
+</style>
+</head>
+
+<body class="bg-white text-ink h-[100dvh] overflow-hidden">
+<div class="h-full flex">
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed md:static z-40 w-72 bg-gray-50 border-r border-gray-200 h-full -translate-x-full md:translate-x-0 transition-transform duration-200 flex flex-col">
+    <div class="flex items-center justify-between px-4 py-4 border-b">
+      <div class="text-2xl font-bold"><span class="text-primary">Profit</span>Phase <span class="text-xs text-primary font-semibold">Beta</span></div>
+      <button class="md:hidden text-gray-600" onclick="toggleSidebar()">✕</button>
+    </div>
+    <div id="sidebarBody" class="p-3 space-y-2 overflow-y-auto scrollbar-hide">
+      <button id="newChatBtn" class="w-full flex items-center gap-2 px-3 py-2 rounded-md hover:bg-indigo-50">🗨️ New Chat</button>
+      <div class="pt-3"><div class="text-xs font-semibold text-gray-500 mb-1">Past Conversations</div></div>
+      <div id="conversationList" class="space-y-1"></div>
+    </div>
+    <div class="mt-auto p-3 border-t space-y-2">
+      <button class="w-full text-left text-sm text-gray-600 hover:text-primary">Report a Problem</button>
+      <button class="w-full text-left text-sm text-gray-600 hover:text-primary">Suggestion</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 flex flex-col md:ml-0">
+    <div class="md:hidden flex items-center justify-between px-4 py-3 border-b">
+      <div class="font-semibold">ProfitPhase Assistant</div>
+      <button class="text-gray-700" onclick="toggleSidebar()">☰</button>
+    </div>
+
+    <!-- Welcome -->
+    <div id="welcome" class="flex-1 grid place-items-center px-4">
+      <div class="text-center max-w-2xl">
+        <h1 class="text-3xl md:text-4xl font-bold mb-2">Welcome to <span class="text-primary">ProfitPhase</span></h1>
+        <p class="text-gray-600">Ask anything about trading or finance. Your past chats will appear on the left.</p>
+      </div>
+    </div>
+
+    <!-- Chat -->
+    <div id="chat" class="hidden flex-1 overflow-y-auto px-3 md:px-6 py-6 space-y-4 scrollbar-hide bg-gray-50"></div>
+
+    <!-- Composer -->
+    <div class="border-t bg-[#f9fafb] px-4 py-3">
+      <div class="max-w-3xl mx-auto flex items-center gap-3 rounded-3xl border border-gray-300 bg-white shadow-sm px-4 py-2 focus-within:ring-2 focus-within:ring-primary transition">
+        <!-- attach -->
+        <form id="uploadForm" class="flex items-center" enctype="multipart/form-data" onsubmit="return false">
+          <label class="cursor-pointer p-2 rounded-full hover:bg-gray-100 text-gray-600">
+            📎
+            <input id="fileInput" type="file" name="file" class="hidden" accept="image/*" multiple />
+          </label>
+        </form>
+        <!-- text input -->
+        <textarea id="input" rows="1" autocomplete="off" placeholder="Send a message…"
+          class="flex-1 resize-none bg-transparent text-sm md:text-base leading-6 focus:outline-none placeholder-gray-400"
+          style="max-height:160px;"></textarea>
+        <!-- mic + send -->
+        <div class="flex items-center gap-1">
+          <button id="mic" type="button"
+            class="p-2 rounded-full text-gray-600 hover:text-primary hover:bg-gray-100 transition">
+            🎤
+          </button>
+          <button id="send" type="button"
+            class="p-2 rounded-full text-gray-600 hover:text-primary hover:bg-gray-100 transition">
+            ➤
+          </button>
+        </div>
+      </div>
+
+      <div class="max-w-3xl mx-auto mt-2 flex flex-wrap items-center justify-between text-xs text-gray-500 gap-y-1">
+        <div id="attachmentsWrap" class="hidden w-full sm:w-auto">
+          <div id="attachments" class="flex flex-wrap gap-2 p-2 rounded-xl border border-gray-200 bg-gray-50"></div>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="flex items-center gap-1 cursor-pointer">
+            <input id="voiceMode" type="checkbox" class="accent-primary">
+            <span>Voice Mode</span>
+          </label>
+          <span id="micHint" class="hidden">Listening…</span>
+          <span id="vmStatus" class="hidden text-primary/80">Voice Mode: hands-free</span>
+          <span class="hidden sm:inline">Press <b>Enter</b> to send • <b>Shift+Enter</b> for new line</span>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Drag Overlay -->
+<div id="dragOverlay"
+     class="fixed inset-0 hidden items-center justify-center bg-black/40 z-[9999] pointer-events-none">
+  <div class="bg-white rounded-2xl px-6 py-4 shadow-xl text-gray-800 text-lg font-semibold border border-gray-200">
+    📁 Drag & Drop images to upload
+  </div>
+</div>
+
+<style>
+  #dragOverlay.show { display:flex; animation:fadein 0.15s ease-out; }
+  @keyframes fadein { from {opacity:0} to {opacity:1} }
+</style>
+
+<!-- Voice Overlay -->
+<div id="voiceOverlay" class="fixed inset-0 hidden z-[9998] bg-white flex flex-col items-center justify-center">
+  <div class="relative w-40 h-40">
+    <div class="absolute inset-0 rounded-full bg-gradient-to-br from-primary/70 to-primary/30 animate-ping"></div>
+    <div class="absolute inset-4 rounded-full bg-gradient-to-br from-primary to-indigo-400 animate-wave"></div>
+    <div class="absolute inset-8 rounded-full bg-white"></div>
+  </div>
+  <div class="mt-12 flex gap-8">
+    <button id="voiceMicBtn" class="w-14 h-14 rounded-full bg-primary text-white text-2xl flex items-center justify-center shadow hover:bg-primary/80">🎤</button>
+    <button id="voiceCloseBtn" class="w-14 h-14 rounded-full bg-gray-200 text-gray-700 text-2xl flex items-center justify-center shadow hover:bg-gray-300">✖</button>
+  </div>
+</div>
+
+<style>
+@keyframes wave { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+.animate-wave{animation:wave 2s ease-in-out infinite}
+</style>
+
+<script>
+/* -------------------- Globals -------------------- */
+let currentConversation = null;
+let conversationButtons = new Map();
+let voiceMode = JSON.parse(localStorage.getItem('pp_voice_mode') || 'false');
+let recognizing=false, recognition=null, micAuto=false;
+let currentStreamAbort = null;
+
+/* -------------------- Helpers -------------------- */
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('-translate-x-full');}
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+    function cleanFences(s="") {
+  return s.replace(/```(?:html)?\s*/gi, "").replace(/```/g, "");
+}
+
+    marked.setOptions({ breaks: true, gfm: true, headerIds: false, mangle: false });
+    
+      // Decode already-escaped entities like &lt;h3&gt; → <h3>
+      function unescapeEntities(s) {
+        if (!s) return "";
+        const ta = document.createElement("textarea");
+        ta.innerHTML = s;
+        return ta.value;
+      }
+    
+      // Render to HTML: first unescape entities, then feed into marked
+function md(t) {
+  return t ? marked.parse(cleanFences(unescapeEntities(t))) : "";
+}
+function parseStoredMessage(content) {
+  const parts = String(content || '').split(/\n\[images\]\n/i);
+  const text   = (parts[0] || '').trim();
+  const images = parts[1]
+    ? parts[1].trim().split(/\n+/).filter(u => /^https?:\/\//.test(u))
+    : [];
+  return { text, images };
+}
+
+/* ---- View control ---- */
+function showWelcome(){
+  document.getElementById('welcome').classList.remove('hidden');
+  const chat = document.getElementById('chat');
+  chat.classList.add('hidden');
+  chat.innerHTML = '';
+}
+function showChat(){
+  document.getElementById('welcome').classList.add('hidden');
+  const chat = document.getElementById('chat');
+  chat.classList.remove('hidden');
+}
+
+function bubble(role, rawContent){
+  const { text, images } = parseStoredMessage(rawContent);
+  const chatEl = document.getElementById('chat');
+
+  const wrap = document.createElement('div');
+  wrap.className = 'flex min-w-0 ' + (role === 'user' ? 'justify-end' : 'justify-start');
+
+  const inner = document.createElement('div');
+  inner.className = (role === 'user')
+    ? 'pp-bubble bg-primary text-white rounded-2xl px-4 py-3'
+    : 'pp-bubble bg-white border border-gray-200 rounded-2xl px-4 py-3';
+
+  if (text) {
+    const t = document.createElement('div');
+    t.innerHTML = md(text);
+    inner.appendChild(t);
+  }
+
+  if (images && images.length) {
+    const grid = document.createElement('div');
+    grid.className = 'mt-2 grid grid-cols-2 gap-2';
+    images.forEach(u=>{
+      const a=document.createElement('a');
+      a.href=u; a.target='_blank'; a.rel='noopener';
+      const img=document.createElement('img');
+      img.src=u; img.alt='attachment';
+      img.className='w-full h-28 object-cover rounded-lg border border-gray-200';
+      a.appendChild(img);
+      grid.appendChild(a);
+    });
+    inner.appendChild(grid);
+  }
+
+  wrap.appendChild(inner);
+  chatEl.appendChild(wrap);
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+function autoResizeTextarea(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,160)+'px';}
+
+/* -------------------- Sidebar -------------------- */
+async function loadConversations(activeId=currentConversation){
+  const r=await fetch('/assistant/conversations');
+  const list=await r.json();
+  const container=document.getElementById('conversationList');
+  container.innerHTML=''; conversationButtons.clear();
+  list.forEach(c=>{
+    const btn=document.createElement('button');
+    btn.className='w-full text-left px-3 py-2 rounded-md hover:bg-indigo-50';
+    btn.textContent=c.title||'(untitled)';
+    btn.dataset.id=c.public_id;
+    btn.onclick=()=>openConversation(c.public_id,true);
+    container.appendChild(btn);
+    conversationButtons.set(c.public_id,btn);
+  });
+  if(activeId&&conversationButtons.has(activeId))markConversationActive(activeId);
+}
+function markConversationActive(id){
+  conversationButtons.forEach(b=>b.classList.remove('conv-active'));
+  const b=conversationButtons.get(id); if(b) b.classList.add('conv-active');
+}
+async function openConversation(publicId,pushUrl=false){
+  abortStream();
+  currentConversation=publicId;
+  markConversationActive(publicId);
+  if(pushUrl){
+    const newUrl=`/assistant/c/${encodeURIComponent(publicId)}`;
+    if(location.pathname!==newUrl)history.pushState({cid:publicId},'',newUrl);
+  }
+  showChat();
+  const chat=document.getElementById('chat');
+  chat.innerHTML='';
+  const r=await fetch(`/assistant/messages/${publicId}`);
+  const msgs=await r.json();
+  msgs.forEach(m=>bubble(m.role, m.content || ''));
+}
+
+window.addEventListener('popstate',e=>{
+  const cid=e.state?.cid;
+  if(cid){ openConversation(cid,false); }
+  else{
+    abortStream();
+    currentConversation=null;
+    markConversationActive(null);
+    showWelcome();
+  }
+});
+document.getElementById('newChatBtn').onclick=()=>{
+  abortStream();
+  currentConversation=null;
+  markConversationActive(null);
+  showWelcome();
+  if(location.pathname.startsWith('/assistant/c/')) history.pushState({},'', '/assistant');
+};
+
+/* -------------------- Voice -------------------- */
+function initSTT(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR)return null;
+  const r=new SR();
+  r.lang="en-IN";
+  r.continuous=true;
+  r.interimResults=true;
+  r.maxAlternatives=1;
+  r.onstart=()=>{recognizing=true;micBtn.classList.add('pulse');micHint.classList.remove('hidden');};
+  r.onend=()=>{recognizing=false;micBtn.classList.remove('pulse');micHint.classList.add('hidden');if(voiceMode&&micAuto)try{r.start();}catch{}};
+  r.onresult=(e)=>{
+    let final="";
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const t=e.results[i][0].transcript;
+      if(e.results[i].isFinal)final+=t;
+      else input.value=(input.value.split(" ").slice(0,-1).join(" ")+" "+t).trim();
+    }
+    if(final.trim()){
+      input.value=final.trim();
+      autoResizeTextarea(input);
+      sendMessage();
+    }
+  };
+  return r;
+}
+function stripEmojis(s){
+  return s
+    .replace(/[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]/gu, '')
+    .replace(/[\u2190-\u21FF\u2300-\u23FF\u2460-\u24FF\u25A0-\u27BF]/g, '');
+}
+function toSpeechText(raw){
+  let t = raw.replace(/<[^>]*>/g, '');
+  t = t
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/__(.*?)__/g, '$1')
+    .replace(/_(.*?)_/g, '$1')
+    .replace(/`{1,3}([^`]+)`{1,3}/g, '$1')
+    .replace(/^\s*[>#]\s?/gm, '')
+    .replace(/^\s*[-*•]\s+/gm, '')
+    .replace(/\[(.*?)\]\((.*?)\)/g, '$1');
+  t = t.replace(/\n{2,}/g, '. ').replace(/\n/g, ', ');
+  t = stripEmojis(t);
+  return t.replace(/\s{2,}/g, ' ').trim();
+}
+async function speak(text){
+  return new Promise((resolve)=>{
+    try{
+      if(recognizing && recognition){ micAuto=false; recognition.stop(); }
+      const cleaned = toSpeechText(text);
+      if(!cleaned){ resolve(); return; }
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(cleaned);
+      u.rate = 1.02; u.lang = "en-IN";
+      u.onend = () => {
+        if(voiceMode && recognition && !recognizing){
+          micAuto = true;
+          try{ recognition.start(); }catch{}
+        }
+        resolve();
+      };
+      speechSynthesis.speak(u);
+    }catch{ resolve(); }
+  });
+}
+
+/* -------------------- Streaming -------------------- */
+function abortStream(){
+  if(currentStreamAbort){
+    try{ currentStreamAbort.abort(); }catch{}
+    currentStreamAbort = null;
+  }
+}
+async function streamChat(text){
+  showChat();
+  abortStream();
+  const chat=document.getElementById('chat');
+
+  const { text: cleanText, images: cleanImages } = parseStoredMessage(text);
+  const safeUserMsg = cleanText + (cleanImages.length ? '\n[images]\n' + cleanImages.join('\n') : '');
+  bubble('user', safeUserMsg);
+
+  // thinking stub
+  const statusWrap=document.createElement('div');
+  statusWrap.className='flex justify-start';
+  const statusInner=document.createElement('div');
+  statusInner.className='pp-bubble bg-white border border-gray-200 rounded-2xl px-4 py-3 text-gray-600';
+  statusInner.innerHTML='🤔 Thinking…';
+  statusWrap.appendChild(statusInner);chat.appendChild(statusWrap);chat.scrollTop=chat.scrollHeight;
+
+  let botWrap=null,acc='',gotToken=false;
+  const url=`/assistant/stream?q=${encodeURIComponent(text)}${currentConversation?`&conversation_id=${encodeURIComponent(currentConversation)}`:''}`;
+  currentStreamAbort = new AbortController();
+  let resp;
+  try{
+    resp = await fetch(url, { signal: currentStreamAbort.signal });
+  }catch(err){
+    if(err.name === 'AbortError') return;
+    statusInner.innerHTML=`<span class="text-red-600">Network error</span>`;
+    return;
+  }
+  if(!resp.ok||!resp.body){statusInner.innerHTML=`<span class="text-red-600">Error: ${resp.status}</span>`;return;}
+  const reader=resp.body.getReader();const decoder=new TextDecoder();
+  if(recognizing&&recognition)recognition.stop();micAuto=voiceMode;
+
+  while(true){
+    const {value,done}=await reader.read();if(done)break;
+    const chunk=decoder.decode(value,{stream:true});const packets=chunk.split('\n\n');
+    for(const pkt of packets){
+      if(!pkt||!pkt.startsWith('data:'))continue;
+      const payload=pkt.replace(/^data:\s*/,'');
+      if(payload==='[DONE]'){
+        loadConversations(currentConversation);
+        if(voiceMode&&acc)await speak(acc);
+        currentStreamAbort = null;
+        return;
+      }
+      let obj;try{obj=JSON.parse(payload);}catch{obj={type:'token',text:payload};}
+      if(obj.type==='meta'&&obj.conversation_id){
+        currentConversation=obj.conversation_id;
+        markConversationActive(currentConversation);
+        const newUrl=`/assistant/c/${encodeURIComponent(currentConversation)}`;
+        if(location.pathname!==newUrl)history.pushState({cid:currentConversation},'',newUrl);
+        continue;
+      }
+      if(obj.type==='status'){statusInner.innerHTML=`⏳ ${escapeHtml(obj.text)}`;continue;}
+      if(obj.type==='token'){
+        if(!gotToken){
+          statusWrap.remove();
+          botWrap=document.createElement('div');
+          botWrap.className='flex justify-start';
+          const inner=document.createElement('div');
+          inner.className='pp-bubble bg-white border border-gray-200 rounded-2xl px-4 py-3';
+          botWrap.appendChild(inner);
+          chat.appendChild(botWrap);
+          gotToken=true;
+        }
+        acc+=obj.text;
+        botWrap.firstChild.innerHTML=md(acc);
+        chat.scrollTop=chat.scrollHeight;
+      }
+    }
+  }
+}
+
+/* -------------------- Send -------------------- */
+function rawSend(val){
+  if(!val) return;
+  micAuto=voiceMode;
+  streamChat(val);
+  if(recognizing&&recognition)recognition.stop();
+}
+function sendMessage(){
+  const val=input.value.trim(); if(!val && selectedFiles.length===0) return;
+}
+
+/* -------------------- DOM wiring -------------------- */
+const input=document.getElementById('input');
+const sendBtn=document.getElementById('send');
+const micBtn=document.getElementById('mic');
+const micHint=document.getElementById('micHint');
+const vmStatus=document.getElementById('vmStatus');
+const voiceToggle=document.getElementById('voiceMode');
+
+voiceToggle.checked=voiceMode;
+vmStatus.classList.toggle('hidden',!voiceMode);
+
+input.addEventListener('input',()=>autoResizeTextarea(input));
+input.addEventListener('focus',()=>autoResizeTextarea(input));
+input.addEventListener('keydown',(e)=>{
+  if(e.key==='Enter' && !e.shiftKey){e.preventDefault();sendMessage();}
+});
+sendBtn.onclick=()=>sendMessage();
+
+function openVoiceOverlay(){voiceOverlay.classList.remove('hidden');document.body.classList.add('overflow-hidden');startVoiceSession();}
+function closeVoiceOverlay(){voiceOverlay.classList.add('hidden');document.body.classList.remove('overflow-hidden');stopVoiceSession();}
+
+micBtn.onclick=()=>{
+  openVoiceOverlay();
+  if(!recognition)recognition=initSTT();
+  if(!recognition){alert("Speech Recognition not supported.");return;}
+  if(recognizing){micAuto=false;recognition.stop();}
+  else{input.value='';autoResizeTextarea(input);micAuto=true;recognition.start();}
+};
+
+voiceToggle.onchange=()=>{
+  voiceMode=voiceToggle.checked;
+  localStorage.setItem('pp_voice_mode',JSON.stringify(voiceMode));
+  vmStatus.classList.toggle('hidden',!voiceMode);
+  if(voiceMode && recognition && !recognizing){micAuto=true;try{recognition.start();}catch{}}
+  else micAuto=false;
+};
+
+window.addEventListener('beforeunload',()=>speechSynthesis.cancel());
+document.addEventListener('visibilitychange',()=>{if(document.hidden)speechSynthesis.cancel();});
+window.addEventListener('popstate', () => { speechSynthesis.cancel(); });
+document.querySelectorAll('a, button[data-nav]').forEach(el => el.addEventListener('click', () => speechSynthesis.cancel()));
+
+/* -------------------- Attachment Manager -------------------- */
+const MAX_FILES = 6;
+const MAX_MB = 15;
+
+let selectedFiles = [];
+let uploadedUrls  = [];
+
+const attachmentsWrap = document.getElementById('attachmentsWrap');
+const attachmentsEl   = document.getElementById('attachments');
+const fileInput       = document.getElementById('fileInput');
+
+function bytesToMB(b){ return (b/1024/1024).toFixed(1); }
+function showAttachmentsTray(show){ attachmentsWrap.classList.toggle('hidden', !show); }
+
+function renderAttachmentChips(){
+  attachmentsEl.innerHTML = '';
+  if (selectedFiles.length === 0){ showAttachmentsTray(false); return; }
+  showAttachmentsTray(true);
+
+  selectedFiles.forEach((file, idx) => {
+    const url = URL.createObjectURL(file);
+    const chip = document.createElement('div');
+    chip.className = 'relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm';
+
+    const img = document.createElement('img');
+    img.src = url; img.alt = file.name; img.className = 'w-full h-full object-cover';
+    chip.appendChild(img);
+
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 shadow';
+    close.innerHTML = '✖';
+    close.onclick = () => { URL.revokeObjectURL(url); selectedFiles.splice(idx, 1); renderAttachmentChips(); };
+    chip.appendChild(close);
+
+    const cap = document.createElement('div');
+    cap.className = 'absolute bottom-0 left-0 right-0 px-1 py-0.5 text-[10px] truncate bg-black/50 text-white';
+    cap.textContent = file.name;
+    chip.appendChild(cap);
+
+    attachmentsEl.appendChild(chip);
+  });
+}
+
+fileInput.addEventListener('change', (e) => {
+  const files = Array.from(e.target.files || []);
+  addFiles(files);
+  fileInput.value = '';
+});
+
+document.addEventListener('paste', (e) => {
+  const items = Array.from(e.clipboardData?.items || []);
+  const images = items.filter(it => it.kind === 'file' && it.type.startsWith('image/')).map(it => it.getAsFile());
+  if(images.length){ addFiles(images); }
+});
+
+const dragOverlay = document.getElementById('dragOverlay');
+let dragCounter = 0;
+function showOverlay() { dragOverlay.classList.add('show'); }
+function hideOverlay() { dragOverlay.classList.remove('show'); }
+
+['dragenter','dragover','dragleave','drop'].forEach(ev =>
+  document.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); })
+);
+document.addEventListener('dragenter', e => { dragCounter++; if (e.dataTransfer?.types?.includes('Files')) showOverlay(); });
+document.addEventListener('dragleave', e => { dragCounter--; if (dragCounter <= 0) { dragCounter = 0; hideOverlay(); } });
+document.addEventListener('drop', e => {
+  hideOverlay(); dragCounter = 0;
+  const files = Array.from(e.dataTransfer?.files || []); if(files.length) addFiles(files);
+});
+
+function addFiles(files){
+  const incoming = [];
+  for(const f of files){
+    if(!f.type.startsWith('image/')) continue;
+    if(f.size > MAX_MB*1024*1024){ alert(`"${f.name}" is ${bytesToMB(f.size)}MB. Max ${MAX_MB}MB per file.`); continue; }
+    incoming.push(f);
+  }
+  const room = Math.max(0, MAX_FILES - selectedFiles.length);
+  selectedFiles = selectedFiles.concat(incoming.slice(0, room));
+  if(incoming.length > room){ alert(`Only ${MAX_FILES} images can be attached.`); }
+  renderAttachmentChips();
+}
+
+async function uploadAllSelected(){
+  if(selectedFiles.length === 0) return [];
+  const urls = [];
+  for(const f of selectedFiles){
+    const formData = new FormData();
+    formData.append('file', f);
+    const r = await fetch('/assistant/upload', { method: 'POST', body: formData });
+    if(!r.ok){ throw new Error(`Upload failed: ${f.name}`); }
+    const j = await r.json();
+    const url = j.url || j.file_url || j.path || null;
+    if(!url){ throw new Error('Upload response missing url'); }
+    urls.push(url);
+  }
+  return urls;
+}
+
+const _origSendMessage = rawSend;
+sendMessage = async function(){
+  const val = input.value.trim();
+  if(!val && selectedFiles.length === 0) return;
+
+  uploadedUrls = [];
+  if(selectedFiles.length){
+    try{
+      showChat();
+      const chat=document.getElementById('chat');
+      const statusWrap=document.createElement('div');
+      statusWrap.className='flex justify-end';
+      const statusInner=document.createElement('div');
+      statusInner.className='pp-bubble bg-primary text-white rounded-2xl px-4 py-2';
+      statusInner.textContent='Uploading images…';
+      statusWrap.appendChild(statusInner);
+      chat.appendChild(statusWrap);
+      chat.scrollTop=chat.scrollHeight;
+
+      uploadedUrls = await uploadAllSelected();
+
+      selectedFiles = [];
+      renderAttachmentChips();
+    }catch(err){
+      alert(err.message || 'Upload failed');
+      return;
+    }
+  }
+
+  let composite = val;
+  if(uploadedUrls.length){
+    composite += (composite ? '\n\n' : '') + '[images]\n' + uploadedUrls.join('\n');
+  }
+
+  input.value = '';
+  autoResizeTextarea(input);
+  _origSendMessage(composite);
+};
+
+/* -------------------- Init -------------------- */
+loadConversations();
+const pathMatch=location.pathname.match(/\/assistant\/c\/([^/]+)/);
+if(pathMatch){const id=decodeURIComponent(pathMatch[1]);openConversation(id,false);}
+
+const voiceOverlay   = document.getElementById('voiceOverlay');
+const voiceMicBtn    = document.getElementById('voiceMicBtn');
+const voiceCloseBtn  = document.getElementById('voiceCloseBtn');
+function startVoiceSession(){ if(!recognition) recognition = initSTT(); if(!recognition) return; micAuto = true; recognition.start(); }
+function stopVoiceSession(){ micAuto = false; if(recognizing && recognition) recognition.stop(); speechSynthesis.cancel(); }
+voiceMicBtn.onclick = () => { if(!recognition) recognition = initSTT(); if(!recognition){ alert('Speech Recognition not supported'); return; } if(recognizing) recognition.stop(); else recognition.start(); };
+voiceCloseBtn.onclick = closeVoiceOverlay;
+</script>
+</body>
+</html>

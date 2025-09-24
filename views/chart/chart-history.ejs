@@ -2,8 +2,10 @@
 <%- include('../include/sidebar') %>
 
 <div class="p-6 text-white">
-  <h2 class="text-3xl font-bold mb-6 flex items-center gap-2">📊 All Chart Analyses</h2>
+ <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6">
+  <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">All Chart Analysis</h1>
 
+</div>
   <% if (reports.length === 0) { %>
     <div class="text-gray-400">No reports found.</div>
   <% } %>

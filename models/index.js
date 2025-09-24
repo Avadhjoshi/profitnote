@@ -18,6 +18,13 @@ const TvTradeSignal = require('./TvTradeSignal')(sequelize, DataTypes);
 const Holding = require('./Holding')(sequelize, DataTypes);
 const AIReport = require('./AIReport')(sequelize, DataTypes);
 const AIHoldingUsage = require('./AIHoldingUsage')(sequelize, DataTypes);
+const Faq      = require('./Faq')(sequelize, DataTypes);
+const Knowledge = require('./Knowledge')(sequelize, DataTypes);
+const Vector   = require('./Vector')(sequelize, DataTypes);
+const Conversation = require('./Conversation')(sequelize, DataTypes);
+const Message   = require('./Message')(sequelize, DataTypes);
+const Alert   = require('./Alert')(sequelize, DataTypes);
+const IndianEquity   = require('./IndianEquity')(sequelize, DataTypes);
 
 // Create central db object
 const db = {
@@ -39,7 +46,14 @@ const db = {
   BrokerCredential,
   Holding,
   AIReport,
-  AIHoldingUsage
+  AIHoldingUsage,
+  Faq,
+  Knowledge,
+  Vector,
+  Conversation,
+  Message,
+  Alert,
+  IndianEquity
 };
 
 // Setup associations if needed (optional)
@@ -48,5 +62,11 @@ Object.keys(db).forEach((modelName) => {
     db[modelName].associate(db);
   }
 });
+if (!Conversation.associations.messages) {
+  Conversation.hasMany(Message, { foreignKey: 'conversation_id', as: 'messages' });
+}
+if (!Message.associations.conversation) {
+  Message.belongsTo(Conversation, { foreignKey: 'conversation_id', as: 'conversation' });
+}
 
 module.exports = db;

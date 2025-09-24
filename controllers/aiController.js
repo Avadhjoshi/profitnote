@@ -11,12 +11,352 @@ const { Op } = require("sequelize");
 // ===================== PRE-TRADE CHECK (Ask AI) =====================
 const PRETRADE_DAILY_LIMIT = parseInt(process.env.AI_PRETRADE_LIMIT || '15', 15);
 
-/**
- * POST /api/ai/trade-check
- * Body: { symbol, side: 'LONG'|'SHORT', duration: 'intraday'|'1-2 days'|'1 week', timeframe?: '15m|1h|4h|1D' }
- */
- 
+/* =========================
+   NEW: Trading-only Chatbot
+   ========================= */
 
+// Model for chat (override via .env CHAT_MODEL=gpt-5-mini | gpt-5 | gpt-4o-mini)
+const CHAT_MODEL = process.env.CHAT_MODEL || "gpt-5-mini";
+
+// Simple trading-topic detector & advice-risk detector
+const TRADING_REGEX =
+  /(market|price|quote|chart|rsi|macd|ema|sma|atr|vwap|support|resistance|order|limit|stop|bracket|backtest|setup|nifty|banknifty|sensex|nasdaq|nyse|forex|pair|btc|eth|crypto|ohlc|volume|candlestick|pnl|risk|position sizing|fvg|order block|adx|supertrend|breakout|pullback|trend|strategy|indicator)/i;
+
+const RISKY_REGEX =
+  /(what should i buy|what should i sell|enter now|exit now|allocate|how many shares|personalized advice|guarantee|sure shot|target price for me|tip)/i;
+
+function classifyTrading(text = "") {
+  const t = text.toLowerCase();
+  return { inScope: TRADING_REGEX.test(t), risky: RISKY_REGEX.test(t) };
+}
+// =====================
+//  Generic AI Assistant
+// =====================
+
+/**
+ * GET  /api/assistant/stream
+ * SSE endpoint: streams a generic AI conversation
+ * Query: ?q=your question
+ */
+// ===================== Advanced Streaming Assistant (ChatGPT-like) =====================
+/**
+ * Natural language → (symbol, timeframe, market) + live OHLC → indicators → structured prompt
+ * Streams tokens to the browser as SSE at /api/assistant/stream?q=...
+ *
+ * NOTE: Reuses your existing getAnyOHLC(symbol, timeframe, market, limit)
+ */
+
+const TFMAP = { '15m':'15m','30m':'30m','1h':'1h','4h':'4h','1d':'1d','daily':'1d','day':'1d' };
+const CRYPTO_ALIASES = {
+  btc:'BTCUSDT', bitcoin:'BTCUSDT',
+  eth:'ETHUSDT', ethereum:'ETHUSDT',
+  sol:'SOLUSDT', bnb:'BNBUSDT'
+};
+
+// ---------- tiny NLU for query ----------
+function parseQuery(q="") {
+  const text = q.toLowerCase();
+
+  // timeframe
+  let timeframe = (text.match(/\b(15m|30m|1h|4h|1d|daily|day)\b/)||[])[1] || '1h';
+  timeframe = TFMAP[timeframe] || '1h';
+
+  // market & symbol
+  let market = null, symbol = null;
+
+  // crypto aliases
+  for (const k of Object.keys(CRYPTO_ALIASES)) {
+    if (text.includes(k)) { symbol = CRYPTO_ALIASES[k]; market = 'crypto'; break; }
+  }
+  // explicit crypto pairs like btc/usdt, eth-usdt, btcusd, etc.
+  if (!symbol) {
+    const pair = (text.match(/\b([a-z]{2,10})[\/:\-\s]?(usdt|usd)\b/i)||[])[0];
+    if (pair) { symbol = pair.replace(/[\s:\/\-]/g,'').toUpperCase(); market = 'crypto'; }
+  }
+
+  // forex (EURUSD / EUR/USD)
+  if (!symbol && /[A-Za-z]{3}\/?[A-Za-z]{3}/.test(q) && q.length <= 20) {
+    symbol = q.toUpperCase().replace('/','').trim();
+    market = 'forex';
+  }
+
+  // Indian (NIFTY / BANKNIFTY / RELIANCE)
+  if (!symbol && /(nifty|banknifty|sensex)/i.test(q)) {
+    symbol = '^NSEI'; market = 'indian';
+  }
+
+  // If still unknown but looks like ticker
+  if (!symbol) {
+    const tick = (q.match(/\b[A-Za-z.&-]{1,10}\b/g)||[]).find(t => t.length>=2 && t.length<=10);
+    if (tick) symbol = tick.toUpperCase();
+  }
+
+  return { symbol, timeframe, market };
+}
+
+// ---------- indicators ----------
+function EMA(series, n){
+  const k = 2/(n+1);
+  let ema = series[0];
+  for (let i=1;i<series.length;i++) ema = series[i]*k + ema*(1-k);
+  return +ema.toFixed(2);
+}
+function RSI(closes, period=14){
+  if (closes.length < period+1) return null;
+  let gains=0, losses=0;
+  for (let i=1;i<=period;i++){
+    const diff = closes[i]-closes[i-1];
+    if (diff>=0) gains += diff; else losses -= diff;
+  }
+  gains/=period; losses/=period;
+  let rs = losses === 0 ? 100 : gains / losses;
+  let rsi = 100 - (100 / (1+rs));
+  for (let i=period+1;i<closes.length;i++){
+    const diff = closes[i]-closes[i-1];
+    const gain = Math.max(diff,0), loss = Math.max(-diff,0);
+    gains = (gains*(period-1)+gain)/period;
+    losses = (losses*(period-1)+loss)/period;
+    rs = losses===0?100:gains/losses;
+    rsi = 100 - (100/(1+rs));
+  }
+  return +rsi.toFixed(2);
+}
+function ATR(candles, period=14){
+  if (candles.length < period+1) return null;
+  const TR = [];
+  for (let i=1;i<candles.length;i++){
+    const h=candles[i].high, l=candles[i].low, cPrev=candles[i-1].close;
+    TR.push(Math.max(h-l, Math.abs(h-cPrev), Math.abs(l-cPrev)));
+  }
+  // Wilder's
+  let atr = TR.slice(0, period).reduce((a,b)=>a+b,0)/period;
+  for (let i=period;i<TR.length;i++){
+    atr = (atr*(period-1) + TR[i]) / period;
+  }
+  return +atr.toFixed(2);
+}
+function swingLevels(candles, lookback=50){
+  const last = candles.slice(-lookback);
+  const hi = Math.max(...last.map(c=>c.high));
+  const lo = Math.min(...last.map(c=>c.low));
+  return { hi:+hi.toFixed(2), lo:+lo.toFixed(2) };
+}
+
+// ---------- prompt builder ----------
+function buildPrompt({q, symbol, timeframe, market, metrics}){
+  const block = metrics ? `
+[DATA BLOCK]
+symbol: ${symbol}
+market: ${market || 'auto'}
+timeframe: ${timeframe}
+latest: ${metrics.latest}
+ema20: ${metrics.ema20}
+ema50: ${metrics.ema50}
+rsi14: ${metrics.rsi14}
+atr14: ${metrics.atr14}
+swing_high: ${metrics.hi}
+swing_low: ${metrics.lo}
+long_trigger: ${metrics.longTrig}
+short_trigger: ${metrics.shortTrig}
+long_stop_hint: ${metrics.longStop}
+short_stop_hint: ${metrics.shortStop}
+` : '';
+
+  return `
+You are ProfitPhase **Pro Assistant**, a professional yet cautious market educator.
+
+**Rules**
+- If the user asks for entries/exits, give **conditional, hypothetical plans** using the data block levels (no personalized advice).
+- Structure sections: **Trend**, **Momentum**, **Key Levels**, **Scenarios** (Long/Short with triggers & invalidation), **Risk Notes**, **Summary**.
+- Keep it concise, numerical, and practical. Use bullet points when helpful.
+- End with: "Educational only. Not investment advice."
+
+${block}
+
+[USER REQUEST]
+${q}
+`;
+}
+
+// ---------- main streaming handler ----------
+exports.streamAssistant = async (req, res) => {
+  try {
+    const q = String(req.query.q || '').trim();
+    if (!q) { res.status(400).end("Missing q"); return; }
+
+    // SSE headers
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache, no-transform");
+    res.setHeader("Connection", "keep-alive");
+    res.flushHeaders?.();
+
+    const parsed = parseQuery(q);
+    let metrics = null;
+
+    // Try to fetch market data if we have/guess a symbol
+    if (parsed.symbol) {
+      try {
+        const tf = parsed.timeframe || '1h';
+        const ohlc = await getAnyOHLC(parsed.symbol, tf, parsed.market || null, 300);
+        if (ohlc?.length) {
+          const closes = ohlc.map(c=>c.close);
+          const ema20 = EMA(closes, 20);
+          const ema50 = EMA(closes, 50);
+          const rsi14 = RSI(closes, 14);
+          const atr14 = ATR(ohlc, 14);
+          const { hi, lo } = swingLevels(ohlc, 60);
+          const latest = +closes[closes.length-1].toFixed(2);
+
+          // Hypothetical triggers from S/R ± ATR
+          const longTrig  = +(hi + 0.1*atr14).toFixed(2);
+          const shortTrig = +(lo - 0.1*atr14).toFixed(2);
+          const longStop  = +(latest - 1.2*atr14).toFixed(2);
+          const shortStop = +(latest + 1.2*atr14).toFixed(2);
+
+          metrics = { latest, ema20, ema50, rsi14, atr14, hi, lo,
+                      longTrig: longTrig, shortTrig: shortTrig,
+                      longStop: longStop, shortStop: shortStop };
+        }
+      } catch (e) {
+        console.warn("Market fetch failed:", e?.message || e);
+      }
+    }
+
+    const systemMsg = {
+      role: "system",
+      content:
+        "You are ProfitPhase Pro Assistant. Be factual, concise, and careful. " +
+        "If markets are discussed, rely on the provided DATA BLOCK. Avoid personalized financial advice."
+    };
+    const userMsg = { role: "user", content: buildPrompt({ q, ...parsed, metrics }) };
+
+    const model = process.env.CHAT_MODEL || "gpt-4o-mini";
+    const stream = await openai.chat.completions.create({
+      model,
+      stream: true,
+      temperature: 0.6,
+      messages: [systemMsg, userMsg]
+    });
+
+    for await (const chunk of stream) {
+      const delta = chunk?.choices?.[0]?.delta?.content;
+      if (delta) res.write(`data: ${JSON.stringify(delta)}\n\n`);
+    }
+    res.write(`data: [DONE]\n\n`);
+    res.end();
+  } catch (err) {
+    console.error("streamAssistant fatal:", err?.response?.data || err);
+    try { res.write(`data: ${JSON.stringify("Error: "+(err.message||"failed"))}\n\n`); } catch {}
+    res.end();
+  }
+};
+
+// Light PII redaction
+function redactPII(text = "") {
+  return text
+    .replace(/\b\d{10}\b/g, "[redacted]") // phone
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[redacted]") // email
+    .replace(/\b\d{8,16}\b/g, "[redacted]"); // crude account
+}
+
+const SYSTEM_PROMPT_TRADING = `
+You are “ProfitPhase Trading Assistant,” a trading-only educational chatbot.
+Allowed: markets, instruments/tickers, indicator explanations, risk concepts, backtesting ideas, platform how-to, public news summaries.
+Disallowed: personalized financial advice (what to buy/sell, allocations), tax/legal advice, guarantees or "sure-shot" calls.
+If user asks outside trading: say "I can help only with trading-related topics. Try markets, strategies, indicators, or platform help."
+If advice-seeking: respond in purely educational, non-directive terms (no specific buy/sell/entry/exit or allocations).
+Be concise and structured. Do not fabricate numbers. Never claim certainty.
+Always append: "Educational only. Not investment advice."
+`.trim();
+
+// Page renderer for the separate Trading Assistant page
+exports.renderTradingAssistantPage = (req, res) => {
+  res.render("assistant/index", {
+    title: "ProfitPhase Trading Assistant",
+    activePage: "assistant",
+  });
+};
+
+/**
+ * POST /api/chat
+ * Body: { message: string }
+ * Returns: { ok, reply }
+ */
+exports.chatTradingBot = async (req, res) => {
+  if (!process.env.OPENAI_API_KEY) {
+    return res.status(500).json({ ok:false, reply:"Server missing OPENAI_API_KEY." });
+  }
+  const CHAT_MODEL = process.env.CHAT_MODEL || "gpt-5-mini";
+
+  // small helpers
+  const extract = (r)=>{
+    if (!r || !Array.isArray(r.choices)) return "";
+    for (const c of r.choices) {
+      const t = c?.message?.content;
+      if (t && typeof t === "string" && t.trim()) return t.trim();
+    }
+    return "";
+  };
+
+  try {
+    const raw = String(req.body?.message || "").slice(0,4000);
+    if (!raw) return res.json({ ok:true, reply:"Ask a trading-related question.\n\nEducational only. Not investment advice." });
+
+    const cleaned = redactPII(raw);
+    const { inScope, risky } = classifyTrading(cleaned);
+    if (!inScope) {
+      return res.json({ ok:true, reply:"I can help only with trading-related topics.\n\nEducational only. Not investment advice." });
+    }
+
+    const userContent = risky
+      ? `User request may imply personal advice. Answer educationally, no directives.\n\nUser: ${cleaned}`
+      : cleaned;
+
+    const reqBody = {
+      model: CHAT_MODEL,
+      max_tokens: 500,             // no temperature (some models reject it)
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT_TRADING },
+        { role: "user", content: userContent },
+      ],
+    };
+
+    let resp, text;
+    try {
+      resp = await openai.chat.completions.create(reqBody);
+      text = extract(resp);
+    } catch (e1) {
+      console.error("OpenAI primary error:", e1?.response?.data || e1.message || e1);
+      const fallback = process.env.CHAT_MODEL_FALLBACK || "gpt-4o-mini";
+      if (fallback && fallback !== CHAT_MODEL) {
+        resp = await openai.chat.completions.create({ ...reqBody, model: fallback });
+        text = extract(resp);
+      }
+    }
+
+    if (!text) {
+      return res.status(502).json({
+        ok:false,
+        reply:"I couldn’t generate a reply right now. Please try again.\n\nEducational only. Not investment advice."
+      });
+    }
+    if (!/Educational only\. Not investment advice\.$/i.test(text)) {
+      text += "\n\nEducational only. Not investment advice.";
+    }
+    return res.json({ ok:true, reply:text });
+  } catch (err) {
+    console.error("chatTradingBot fatal:", err?.response?.data || err.message || err);
+    return res.status(500).json({
+      ok:false,
+      reply:"Server error while generating a response. Please try again.\n\nEducational only. Not investment advice."
+    });
+  }
+};
+
+
+/* =========================
+   EXISTING: Timeframe maps & market data helpers
+   ========================= */
 
 // map "15m|30m|1h|4h|1d" to each provider
 const TF = {
@@ -156,75 +496,9 @@ function calcBasics(ohlc) {
 }
 
 
-/*exports.preTradeCheck = async (req, res) => {
-  const userId = req.body.user_id || req.params.user_id || req.session.user?.id;
-  const { symbol, side, duration, timeframe, market } = req.body || {};
-  const today = new Date().toISOString().split('T')[0];
-
-  if (!userId) return res.status(401).json({ error: "Unauthorized" });
-  if (!symbol || !side || !duration) {
-    return res.status(400).json({ error: "symbol, side, and duration are required." });
-  }
-
-  try {
-    // daily limit
-    const used = await AIHoldingUsage.count({
-      where: { user_id: userId, date: today, report_type: 'pretrade_check' }
-    });
-    if (used >= PRETRADE_DAILY_LIMIT) {
-      return res.status(429).json({ error: `⚠️ Limit reached: Only ${PRETRADE_DAILY_LIMIT} AI pre-trade checks allowed per day.` });
-    }
-
-    // live OHLC (Crypto / Indian / Forex / US)
-    const tf = timeframe || '1h';
-    const ohlc = await getAnyOHLC(symbol, tf, market || null, 120);
-    if (!ohlc?.length) return res.status(500).json({ error: 'No market data.' });
-
-    const basics = calcBasics(ohlc);
-    const { latest, hi, lo, ema20, ema50 } = basics;
-
-    const prompt = `
-You are an experienced trading coach. Evaluate a potential ${side} trade on **${symbol.toUpperCase()}**.
-
-Timeframe: ${tf}
-Recent market data (last ${ohlc.length} candles):
-- Latest price: ${latest}
-- Range high: ${hi}
-- Range low: ${lo}
-- EMA20: ${ema20}
-- EMA50: ${ema50}
-
-Rules:
-- Use ONLY these numbers for any levels. Do not invent prices.
-- Keep it concise and risk-first.
-
-Return Markdown:
-1) **Verdict (YES/NO)** to enter ${side} now
-2) Market context (trend vs EMAs, momentum)
-3) Key levels (bold the numbers above)
-4) Entry idea + invalidation/stop
-5) Alternatives / avoid reasons
-`.trim();
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-5",
-      messages: [{ role: "user", content: prompt }],
-      //temperature: 1,
-      //max_completion_tokens: 800
-    });
-
-    const verdict = completion.choices[0]?.message?.content?.trim() || "No analysis generated.";
-
-    // save usage + report
-    await AIHoldingUsage.create({ user_id: userId, date: today, report_type: "pretrade_check" });
-    await AIReport.create({ user_id: userId, report_type: "pretrade_check", report_content: verdict, created_at: new Date() });
-
-    return res.json({ verdict, latest, hi, lo, ema20, ema50 });
-  } catch (err) {
-    console.error('Live pre-trade error:', err?.response?.data || err.message || err);
-    return res.status(500).json({ error: "Live analysis failed. Try again later." });
-  }
-};*/
+/* -----------------------------
+   EXISTING preTradeCheck (kept)
+   ----------------------------- */
 exports.preTradeCheck = async (req, res) => {
   const userId = req.body.user_id || req.params.user_id || req.session.user?.id;
   const { symbol, side, duration, timeframe, market } = req.body || {};
@@ -561,6 +835,7 @@ ${JSON.stringify(cleanHoldings, null, 2)}
     return res.status(500).json({ error: "AI generation failed. Please try again later." });
   }
 };
+
 exports.renderAIReports = async (req, res) => {
   const userId = req.session.user?.id;
 
@@ -590,6 +865,7 @@ exports.renderAIReports = async (req, res) => {
     res.status(500).send("Failed to load report.");
   }
 };
+
 exports.renderAITradeReports = async (req, res) => {
   const userId = req.session.user?.id;
 
@@ -623,6 +899,7 @@ exports.renderAITradeReports = async (req, res) => {
 exports.chartAnalyze = (req, res) => {
   res.render('chart/chart-analyzer', { result: null, error: null,'activePage':'chart_analyzer' });
 };
+
 exports.analyzeChart = async (req, res) => {
   const userId = req.session.user?.id;
   const today = new Date().toISOString().split('T')[0];
@@ -697,6 +974,7 @@ exports.analyzeChart = async (req, res) => {
     return res.json({ success: false, error: "❌ AI Analysis failed." });
   }
 };
+
 exports.getAllChartReports = async (req, res) => {
   const userId = req.session.user?.id;
 

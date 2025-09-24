@@ -1,30 +1,33 @@
 <%- include('../include/header') %>
 <%- include('../include/sidebar') %>
 
-<div class="p-6 bg-[#0f172a] text-white min-h-screen">
-  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-    
+<div class="p-6 bg-[#0f172a] text-white min-h-screen overflow-x-hidden">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
     <!-- Left: Title -->
     <h2 class="text-2xl font-bold">Connect Brokers</h2>
 
-    <!-- Right: Dropdown + Search aligned right -->
-    <div class="flex flex-col md:flex-row items-center gap-4 md:ml-auto">
-      <select id="marketSelect" onchange="filterBrokers()" class="bg-[#1e293b] px-3 py-2 rounded text-white">
+    <!-- Right: Dropdown + Search -->
+    <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:ml-auto w-full sm:w-auto">
+      <select id="marketSelect" onchange="filterBrokers()"
+        class="bg-[#1e293b] px-3 py-2 rounded text-white w-full sm:w-auto">
         <option value="all">All Markets</option>
         <% marketCategories.forEach(mc => { %>
           <option value="<%= mc.id %>"><%= mc.market_name %></option>
         <% }) %>
       </select>
 
-      <input type="text" id="brokerSearch" placeholder="🔍 Broker Search"
-        class="bg-[#1e293b] px-4 py-2 w-full md:w-[300px] rounded outline-none text-white placeholder:text-gray-400" />
+      <input type="text" id="brokerSearch" placeholder="Broker Search"
+        class="bg-[#1e293b] px-4 py-2 w-full sm:w-[300px] rounded outline-none text-white placeholder:text-gray-400" />
     </div>
   </div>
 
-
+  <!-- Broker List -->
   <div class="space-y-4" id="brokerList">
     <% brokers.forEach(b => { %>
-      <div data-market="<%= b.market_id %>" class="broker-item flex justify-between items-center bg-[#1e293b] p-4 rounded">
+      <div data-market="<%= b.market_id %>"
+           class="broker-item flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-[#1e293b] p-4 rounded">
+        <!-- Left: Icon + Name + Connected badge -->
         <div class="flex items-center gap-3">
           <% if (b.icon_url) { %>
             <img src="<%= b.icon_url %>" class="w-6 h-6" />
@@ -34,45 +37,54 @@
             <span class="ml-2 text-sm text-green-400 px-2 py-0.5 bg-green-800 rounded">Connected</span>
           <% } %>
         </div>
-        <div class="flex gap-2">
+
+        <!-- Right: Actions -->
+        <div class="flex flex-wrap gap-2">
           <% if (credentialsMap[b.id]) { %>
-  <% if (b.name.includes("Zerodha")) { %>
-    <button id="syncBtn"
-      onclick="syncZerodhaTrades()"
-      class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white">
-      Sync Zerodha Trades
-    </button>
-  <% } else if (b.name.includes("Delta")) { %>
-    <button id="syncDeltaBtn"
-      onclick="syncDeltaTrades()"
-      class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-white">
-      Sync Delta Trades
-    </button>
-  <% } else if (b.name.includes("Angel One")) { %>
-    <button onclick="syncAngel()" class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded text-white">
-      Sync Angel Trades
-    </button>
-  <% } else if (b.name.includes("Dhan")) { %>
-    <button onclick="syncDhan()" class="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded text-white">
-      Sync Dhan Trades
-    </button>
-  <% } %>
-<% } %>
-
-
             <% if (b.name.includes("Zerodha")) { %>
-                  <% if (!credentialsMap[b.id]?.access_token) { %>
-                    <a href="/credentials/zerodha/login" class="bg-yellow-500 hover:bg-yellow-600 text-sm px-3 py-1 rounded text-black">
-                      <i class="fas fa-sign-in-alt"></i> Login to Zerodha
-                    </a>
-                  <% } %>
-                <% } %>
+              <button id="syncBtn"
+                onclick="syncZerodhaTrades()"
+                class="bg-blue-600 hover:bg-blue-700 px-3 sm:px-4 py-2 rounded text-white text-sm sm:text-base">
+                Sync Zerodha Trades
+              </button>
+            <% } else if (b.name.includes("Delta")) { %>
+              <button id="syncDeltaBtn"
+                onclick="syncDeltaTrades()"
+                class="bg-purple-600 hover:bg-purple-700 px-3 sm:px-4 py-2 rounded text-white text-sm sm:text-base">
+                Sync Delta Trades
+              </button>
+            <% } else if (b.name.includes("Angel One")) { %>
+              <button onclick="syncAngel()"
+                class="bg-indigo-600 hover:bg-indigo-700 px-3 sm:px-4 py-2 rounded text-white text-sm sm:text-base">
+                Sync Angel Trades
+              </button>
+            <% } else if (b.name.includes("Dhan")) { %>
+              <button onclick="syncDhan()"
+                class="bg-pink-600 hover:bg-pink-700 px-3 sm:px-4 py-2 rounded text-white text-sm sm:text-base">
+                Sync Dhan Trades
+              </button>
+            <% } %>
+          <% } %>
+
+          <% if (b.name.includes("Zerodha")) { %>
+            <% if (!credentialsMap[b.id]?.access_token) { %>
+              <a href="/credentials/zerodha/login"
+                 class="bg-yellow-500 hover:bg-yellow-600 text-sm px-3 py-2 rounded text-black">
+                Login to Zerodha
+              </a>
+            <% } %>
+          <% } %>
 
           <% if (credentialsMap[b.id]) { %>
-            <button onclick="deleteCredential(<%= b.id %>)" class="text-red-400 hover:underline text-sm">Disconnect</button>
+            <button onclick="deleteCredential(<%= b.id %>)"
+                    class="text-red-400 hover:underline text-sm px-2 py-2">
+              Disconnect
+            </button>
           <% } %>
-          <button onclick="openBrokerModal(<%= b.id %>)" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm">
-            <i class="fas fa-link"></i> Connect
+
+          <button onclick="openBrokerModal(<%= b.id %>)"
+                  class="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-sm">
+            Connect
           </button>
         </div>
       </div>
@@ -103,12 +115,11 @@
         <input name="client_id" placeholder="Client ID" class="input" value="<%= credentialsMap[b.id]?.client_id || '' %>">
         <input name="pin" placeholder="M-PIN" class="input" value="<%= credentialsMap[b.id]?.pin || '' %>">
         <input name="totp_secret" placeholder="TOTP Code" class="input" value="<%= credentialsMap[b.id]?.totp_secret || '' %>">
-       
         <input readonly value="<%= b.callback_url %>" class="input bg-[#334155]" />
       <% } else if (b.name.includes("Delta")) { %>
-          <input name="api_key" placeholder="API Key" class="input" value="<%= credentialsMap[b.id]?.api_key || '' %>">
-          <input name="secret_key" placeholder="Secret Key" class="input" value="<%= credentialsMap[b.id]?.secret_key || '' %>">
-          <input readonly value="<%= b.callback_url %>" class="input bg-[#334155]" />
+        <input name="api_key" placeholder="API Key" class="input" value="<%= credentialsMap[b.id]?.api_key || '' %>">
+        <input name="secret_key" placeholder="Secret Key" class="input" value="<%= credentialsMap[b.id]?.secret_key || '' %>">
+        <input readonly value="<%= b.callback_url %>" class="input bg-[#334155]" />
       <% } else { %>
         <p>No fields configured for this broker.</p>
       <% } %>
@@ -119,70 +130,6 @@
 <% }) %>
 
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-<script>
-  function syncZerodhaTrades() {
-    const btn = document.getElementById("syncBtn");
-    btn.disabled = true;
-    btn.innerHTML = "Syncing...";
-
-    fetch("/credentials/sync-zerodha")
-      .then(res => res.text())
-      .then(msg => {
-        Toastify({
-          text: msg,
-          duration: 4000,
-          gravity: "top",
-          position: "right",
-          backgroundColor: msg.includes("✅") ? "#22c55e" : "#ef4444",
-        }).showToast();
-        btn.disabled = false;
-        btn.innerHTML = "Sync Zerodha Trades";
-      })
-      .catch(err => {
-        Toastify({
-          text: "❌ Error syncing trades",
-          duration: 4000,
-          gravity: "top",
-          position: "right",
-          backgroundColor: "#ef4444",
-        }).showToast();
-        btn.disabled = false;
-        btn.innerHTML = "Sync Zerodha Trades";
-      });
-  }
-
-  function syncDeltaTrades() {
-    const btn = document.getElementById("syncDeltaBtn");
-    btn.disabled = true;
-    btn.innerHTML = "Syncing...";
-
-    fetch("/credentials/sync-delta")
-      .then(res => res.text())
-      .then(msg => {
-        Toastify({
-          text: msg,
-          duration: 4000,
-          gravity: "top",
-          position: "right",
-          backgroundColor: msg.includes("✅") ? "#22c55e" : "#ef4444",
-        }).showToast();
-        btn.disabled = false;
-        btn.innerHTML = "Sync Delta Trades";
-      })
-      .catch(err => {
-        Toastify({
-          text: "❌ Error syncing Delta trades",
-          duration: 4000,
-          gravity: "top",
-          position: "right",
-          backgroundColor: "#ef4444",
-        }).showToast();
-        btn.disabled = false;
-        btn.innerHTML = "Sync Delta Trades";
-      });
-  }
-</script>
-
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
 <style>
@@ -199,44 +146,42 @@
 
 <script>
   function openBrokerModal(id) {
-    document.getElementById(`modal-${id}`).classList.remove('hidden');
-    document.getElementById(`modal-${id}`).classList.add('flex');
+    const el = document.getElementById(`modal-${id}`);
+    el.classList.remove('hidden');
+    el.classList.add('flex');
   }
 
   function closeModal(id) {
-    document.getElementById(`modal-${id}`).classList.add('hidden');
+    const el = document.getElementById(`modal-${id}`);
+    el.classList.add('hidden');
+    el.classList.remove('flex');
   }
 
-function submitBroker(e, id) {
-  e.preventDefault();
-  const btn = document.getElementById(`btn-${id}`);
-  btn.disabled = true;
-  btn.innerHTML = 'Saving...';
+  function submitBroker(e, id) {
+    e.preventDefault();
+    const btn = document.getElementById(`btn-${id}`);
+    btn.disabled = true;
+    btn.innerHTML = 'Saving...';
 
-  const form = document.getElementById(`form-${id}`);
-  const formData = new FormData(form);
+    const form = document.getElementById(`form-${id}`);
+    const formData = new FormData(form);
 
-  // DEBUG LOG: show form fields
-  for (const pair of formData.entries()) {
-    console.log(`${pair[0]}: ${pair[1]}`);
+    fetch('/credentials/save', {
+      method: 'POST',
+      body: formData
+    }).then(res => res.json()).then(data => {
+      btn.disabled = false;
+      btn.innerHTML = 'Save';
+      Toastify({
+        text: data.message,
+        duration: 3000,
+        gravity: 'top',
+        position: 'right',
+        backgroundColor: data.success ? "#22c55e" : "#ef4444"
+      }).showToast();
+      if (data.success) location.reload();
+    });
   }
-
-  fetch('/credentials/save', {
-    method: 'POST',
-    body: formData
-  }).then(res => res.json()).then(data => {
-    btn.disabled = false;
-    btn.innerHTML = 'Save';
-    Toastify({
-      text: data.message,
-      duration: 3000,
-      gravity: 'top',
-      position: 'right',
-      backgroundColor: data.success ? "#22c55e" : "#ef4444"
-    }).showToast();
-    if (data.success) location.reload();
-  });
-}
 
   function deleteCredential(broker_id) {
     fetch('/credentials/delete', {
@@ -269,17 +214,60 @@ function submitBroker(e, id) {
       div.style.display = (selected === 'all' || market === selected) ? '' : 'none';
     });
   }
-  function syncAngel() {
-  fetch("/credentials/sync-angel-trades")
-    .then(r => r.text())
-    .then(msg => Toastify({ text: msg, duration: 3000, gravity: "top", position: "right", backgroundColor: "#38bdf8" }).showToast());
-}
-function syncDhan() {
-  fetch("/credentials/sync-dhan")
-    .then(r => r.text())
-    .then(msg => Toastify({ text: msg, duration: 3000, gravity: "top", position: "right", backgroundColor: "#f43f5e" }).showToast());
-}
 
+  function syncZerodhaTrades() {
+    const btn = document.getElementById("syncBtn");
+    btn.disabled = true;
+    btn.innerHTML = "Syncing...";
+    fetch("/credentials/sync-zerodha")
+      .then(res => res.text())
+      .then(msg => {
+        Toastify({ text: msg, duration: 4000, gravity: "top", position: "right",
+          backgroundColor: msg.toLowerCase().includes("success") ? "#22c55e" : "#ef4444" }).showToast();
+        btn.disabled = false;
+        btn.innerHTML = "Sync Zerodha Trades";
+      })
+      .catch(() => {
+        Toastify({ text: "Error syncing trades", duration: 4000, gravity: "top", position: "right",
+          backgroundColor: "#ef4444" }).showToast();
+        btn.disabled = false;
+        btn.innerHTML = "Sync Zerodha Trades";
+      });
+  }
+
+  function syncDeltaTrades() {
+    const btn = document.getElementById("syncDeltaBtn");
+    btn.disabled = true;
+    btn.innerHTML = "Syncing...";
+    fetch("/credentials/sync-delta")
+      .then(res => res.text())
+      .then(msg => {
+        Toastify({ text: msg, duration: 4000, gravity: "top", position: "right",
+          backgroundColor: msg.toLowerCase().includes("success") ? "#22c55e" : "#ef4444" }).showToast();
+        btn.disabled = false;
+        btn.innerHTML = "Sync Delta Trades";
+      })
+      .catch(() => {
+        Toastify({ text: "Error syncing Delta trades", duration: 4000, gravity: "top", position: "right",
+          backgroundColor: "#ef4444" }).showToast();
+        btn.disabled = false;
+        btn.innerHTML = "Sync Delta Trades";
+      });
+  }
+
+  function syncAngel() {
+    fetch("/credentials/sync-angel-trades")
+      .then(r => r.text())
+      .then(msg => Toastify({ text: msg, duration: 3000, gravity: "top", position: "right",
+        backgroundColor: "#38bdf8" }).showToast());
+  }
+
+  function syncDhan() {
+    fetch("/credentials/sync-dhan")
+      .then(r => r.text())
+      .then(msg => Toastify({ text: msg, duration: 3000, gravity: "top", position: "right",
+        backgroundColor: "#f43f5e" }).showToast());
+  }
 </script>
 
 <%- include('../include/footer') %>

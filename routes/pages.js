@@ -14,7 +14,7 @@ const dhanController = require('../controllers/dhanController');
 const dhantest = require('../controllers/dhantest');
 const aiController = require("../controllers/aiController");
 const authController = require('../controllers/authController');
-
+const assistantController=require('../controllers/assistantController');
 const multer = require('multer');
 const path = require('path');
 
@@ -141,5 +141,15 @@ router.get('/profile', requireAdminLogin,userController.renderEditProfile);
 router.post('/profile/update', requireAdminLogin, userController.updateProfile);
 router.post('/profile/change-password', requireAdminLogin, userController.changePassword);
 
+
+router.get(['/assistant', '/assistant/c/:id'], aiController.renderTradingAssistantPage);
+router.post('/api/chat', aiController.chatTradingBot);
+
+router.get("/api/assistant/stream", aiController.streamAssistant);
+router.get("/assistant/stream", assistantController.streamAssistant);
+
+router.get("/assistant/conversations", assistantController.listConversations);
+router.get('/assistant/messages/:public_id', assistantController.getMessages);
+router.post("/assistant/upload", upload.single("file"),assistantController.uploadFile);
 
 module.exports = router;

@@ -2,6 +2,11 @@
 <%- include('../include/sidebar') %>
 
 <div class="p-6">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6">
+    <!-- Title -->
+    <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Holding</h1>
+  </div>
+
   <% 
     let totalInvested = 0;
     let totalMarketValue = 0;
@@ -17,60 +22,58 @@
     totalMarketValue += marketValue;
     totalPnL += pnl;
     todayChange += Math.round(h.quantity * h.day_change);
-    
-
   }) %>
 
   <!-- Total Cards -->
-<div class="flex gap-6 mb-8 flex-wrap lg:flex-nowrap">
-  <!-- TODAY'S P&L -->
-  <div class="flex-1 bg-[#1e293b] p-6 rounded-2xl shadow-xl flex items-center justify-between min-w-[250px]">
-    <div>
-      <div class="text-base text-gray-400 flex items-center gap-1">📆 TODAY'S P&L</div>
-      <div class="text-2xl font-bold <%= todayChange >= 0 ? 'text-green-400' : 'text-red-400' %>">
-        <%= todayChange >= 0 ? '▲' : '▼' %> <%= currencySymbol %><%= todayChange.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+  <div class="flex gap-6 mb-8 flex-wrap lg:flex-nowrap">
+    <!-- TODAY'S P&L -->
+    <div class="flex-1 bg-[#1e293b] p-6 rounded-2xl shadow-xl flex items-center justify-between min-w-[250px]">
+      <div>
+        <div class="text-base text-gray-400 flex items-center gap-1">📆 TODAY'S P&L</div>
+        <div class="text-2xl font-bold <%= todayChange >= 0 ? 'text-green-400' : 'text-red-400' %>">
+          <%= todayChange >= 0 ? '▲' : '▼' %> <%= currencySymbol %><%= todayChange.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+        </div>
+      </div>
+      <div class="text-4xl <%= todayChange >= 0 ? 'text-green-400' : 'text-red-400' %>">
+        <%= todayChange >= 0 ? '🚀' : '📉' %>
       </div>
     </div>
-    <div class="text-4xl <%= todayChange >= 0 ? 'text-green-400' : 'text-red-400' %>">
-      <%= todayChange >= 0 ? '🚀' : '📉' %>
-    </div>
-  </div>
 
-  <!-- TOTAL P&L -->
-  <div class="flex-1 bg-[#1e293b] p-6 rounded-2xl shadow-xl flex items-center justify-between min-w-[250px]">
-    <div>
-      <div class="text-base text-gray-400 flex items-center gap-1">📉 TOTAL P&L</div>
-      <div class="text-2xl font-bold <%= totalPnL >= 0 ? 'text-green-400' : 'text-red-400' %>">
-        <%= totalPnL >= 0 ? '▲' : '▼' %> <%= currencySymbol %><%= totalPnL.toLocaleString('en-IN') %>
+    <!-- TOTAL P&L -->
+    <div class="flex-1 bg-[#1e293b] p-6 rounded-2xl shadow-xl flex items-center justify-between min-w-[250px]">
+      <div>
+        <div class="text-base text-gray-400 flex items-center gap-1">📉 TOTAL P&L</div>
+        <div class="text-2xl font-bold <%= totalPnL >= 0 ? 'text-green-400' : 'text-red-400' %>">
+          <%= totalPnL >= 0 ? '▲' : '▼' %> <%= currencySymbol %><%= totalPnL.toLocaleString('en-IN') %>
+        </div>
+      </div>
+      <div class="text-4xl <%= totalPnL >= 0 ? 'text-green-400' : 'text-red-400' %>">
+        <%= totalPnL >= 0 ? '📈' : '🔻' %>
       </div>
     </div>
-    <div class="text-4xl <%= totalPnL >= 0 ? 'text-green-400' : 'text-red-400' %>">
-      <%= totalPnL >= 0 ? '📈' : '🔻' %>
-    </div>
-  </div>
 
-  <!-- INVESTED AMOUNT -->
-  <div class="flex-1 bg-[#1e293b] p-6 rounded-2xl shadow-xl flex items-center justify-between min-w-[250px]">
-    <div>
-      <div class="text-base text-gray-400 flex items-center gap-1">💰 INVESTED AMOUNT</div>
-      <div class="text-2xl font-bold text-white">
-        <%= currencySymbol %><%= totalInvested.toLocaleString('en-IN') %>
+    <!-- INVESTED AMOUNT -->
+    <div class="flex-1 bg-[#1e293b] p-6 rounded-2xl shadow-xl flex items-center justify-between min-w-[250px]">
+      <div>
+        <div class="text-base text-gray-400 flex items-center gap-1">💰 INVESTED AMOUNT</div>
+        <div class="text-2xl font-bold text-white">
+          <%= currencySymbol %><%= totalInvested.toLocaleString('en-IN') %>
+        </div>
       </div>
+      <div class="text-4xl text-white">💼</div>
     </div>
-    <div class="text-4xl text-white">💼</div>
-  </div>
 
-  <!-- MARKET VALUE -->
-  <div class="flex-1 bg-[#1e293b] p-6 rounded-2xl shadow-xl flex items-center justify-between min-w-[250px]">
-    <div>
-      <div class="text-base text-gray-400 flex items-center gap-1">📊 MARKET VALUE</div>
-      <div class="text-2xl font-bold text-white">
-        <%= currencySymbol %><%= totalMarketValue.toLocaleString('en-IN') %>
+    <!-- MARKET VALUE -->
+    <div class="flex-1 bg-[#1e293b] p-6 rounded-2xl shadow-xl flex items-center justify-between min-w-[250px]">
+      <div>
+        <div class="text-base text-gray-400 flex items-center gap-1">📊 MARKET VALUE</div>
+        <div class="text-2xl font-bold text-white">
+          <%= currencySymbol %><%= totalMarketValue.toLocaleString('en-IN') %>
+        </div>
       </div>
+      <div class="text-4xl text-white">🏦</div>
     </div>
-    <div class="text-4xl text-white">🏦</div>
   </div>
-</div>
 
   <!-- Filters + Actions -->
   <form method="GET" class="flex items-center gap-2 mb-6 flex-wrap">
@@ -84,36 +87,38 @@
 
     <!-- Market Type Filter -->
     <select name="market_type" onchange="this.form.submit()" class="bg-[#1e293b] text-white px-3 py-2 rounded-md border border-gray-600 text-sm">
-       <% marketCategories.forEach(cat => { %>
+      <% marketCategories.forEach(cat => { %>
         <option value="<%= cat.id %>" <%= market_type == cat.id ? 'selected' : '' %>><%= cat.market_name %></option>
       <% }) %>
     </select>
 
     <!-- Sync Button -->
     <button id="syncHoldingsBtn" onclick="syncHoldings()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-md transition-all">
-  🔄 Sync Holdings
-</button>
+      🔄 Sync Holdings
+    </button>
 
-<!-- AI Insight Button -->
-<button id="generateInsightBtn" onclick="generateInsight()" class="bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2 rounded-md transition-all">
-  🔍 Generate AI Insight
-</button>
+    <!-- AI Insight Button -->
+    <button id="generateInsightBtn" onclick="generateInsight()" class="bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2 rounded-md transition-all">
+      🔍 Generate AI Insight
+    </button>
 
     <!-- Export Button -->
     <button type="button" id="exportBtn" class="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded-md transition-all">
       📄 Export to Excel
     </button>
   </form>
-<!-- AI Report Display -->
-<div id="aiReportContainer" class="mt-10 hidden bg-[#1e293b] border border-gray-600 rounded-xl p-6 mb-8">
-  <div class="flex justify-between items-center mb-3 text-sm text-gray-400">
-    <span id="generatedAt">📅 Generated just now</span>
-    <button onclick="downloadAIReport()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">
-      📄 Download PDF
-    </button>
+
+  <!-- AI Report Display -->
+  <div id="aiReportContainer" class="mt-10 hidden bg-[#1e293b] border border-gray-600 rounded-xl p-6 mb-8">
+    <div class="flex justify-between items-center mb-3 text-sm text-gray-400">
+      <span id="generatedAt">Generated just now</span>
+      <button onclick="downloadAIReport()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">
+        Download PDF
+      </button>
+    </div>
+    <!-- styled markdown content -->
+    <div id="aiReportContent" class="prose ai-prose prose-invert prose-sm max-w-none whitespace-pre-wrap text-white"></div>
   </div>
-  <div id="aiReportContent" class="prose prose-invert prose-sm max-w-none whitespace-pre-wrap text-white"></div>
-</div>
 
   <!-- Holdings Table -->
   <% if (holdings.length === 0) { %>
@@ -121,10 +126,10 @@
   <% } else { %>
     <div class="overflow-x-auto">
       <table id="holdingsTable" class="min-w-full text-sm text-white bg-[#1e293b] rounded-xl overflow-hidden">
-       <thead>
+        <thead>
           <tr class="bg-[#334155] text-left text-xs uppercase text-gray-300">
-             <th class="px-4 py-2 cursor-pointer" onclick="sortTable(1)">Broker <span>▲▼</span></th>
-             <th class="px-4 py-2 cursor-pointer" onclick="sortTable(0)">Symbol <span>▲▼</span></th>
+            <th class="px-4 py-2 cursor-pointer" onclick="sortTable(1)">Broker <span>▲▼</span></th>
+            <th class="px-4 py-2 cursor-pointer" onclick="sortTable(0)">Symbol <span>▲▼</span></th>
             <th class="px-4 py-2 cursor-pointer" onclick="sortTable(2)">Qty <span>▲▼</span></th>
             <th class="px-4 py-2 cursor-pointer" onclick="sortTable(3)">T1 Qty <span>▲▼</span></th>
             <th class="px-4 py-2 cursor-pointer" onclick="sortTable(4)">Avg Price <span>▲▼</span></th>
@@ -134,26 +139,25 @@
             <th class="px-4 py-2 cursor-pointer" onclick="sortTable(8)">Market Value <span>▲▼</span></th>
           </tr>
         </thead>
-
         <tbody>
           <% holdings.forEach(h => {
             const invested = Math.round(h.quantity * h.average_price);
             const marketValue = Math.round(h.quantity * h.last_price);
             const pnl = Math.round(h.pnl);
           %>
-            <tr class="border-b border-gray-700 hover:bg-[#2d3748]">
-              <td class="px-4 py-2"><%= h.Broker?.name || '-' %></td>
-              <td class="px-4 py-2"><%= h.tradingsymbol %></td>
-              <td class="px-4 py-2"><%= h.quantity %></td>
-              <td class="px-4 py-2"><%= h.t1_quantity %></td>
-              <td class="px-4 py-2"><%= currencySymbol %><%= Math.round(h.average_price).toLocaleString('en-IN') %></td>
-              <td class="px-4 py-2"><%= currencySymbol %><%= Math.round(h.last_price).toLocaleString('en-IN') %></td>
-              <td class="px-4 py-2 <%= pnl >= 0 ? 'text-green-400' : 'text-red-400' %>">
-                <%= pnl >= 0 ? '▲' : '▼' %> <%= currencySymbol %><%= pnl.toLocaleString('en-IN') %>
-              </td>
-              <td class="px-4 py-2"><%= currencySymbol %><%= invested.toLocaleString('en-IN') %></td>
-              <td class="px-4 py-2"><%= currencySymbol %><%= marketValue.toLocaleString('en-IN') %></td>
-            </tr>
+          <tr class="border-b border-gray-700 hover:bg-[#2d3748]">
+            <td class="px-4 py-2"><%= h.Broker?.name || '-' %></td>
+            <td class="px-4 py-2"><%= h.tradingsymbol %></td>
+            <td class="px-4 py-2"><%= h.quantity %></td>
+            <td class="px-4 py-2"><%= h.t1_quantity %></td>
+            <td class="px-4 py-2"><%= currencySymbol %><%= Math.round(h.average_price).toLocaleString('en-IN') %></td>
+            <td class="px-4 py-2"><%= currencySymbol %><%= Math.round(h.last_price).toLocaleString('en-IN') %></td>
+            <td class="px-4 py-2 <%= pnl >= 0 ? 'text-green-400' : 'text-red-400' %>">
+              <%= pnl >= 0 ? '▲' : '▼' %> <%= currencySymbol %><%= pnl.toLocaleString('en-IN') %>
+            </td>
+            <td class="px-4 py-2"><%= currencySymbol %><%= invested.toLocaleString('en-IN') %></td>
+            <td class="px-4 py-2"><%= currencySymbol %><%= marketValue.toLocaleString('en-IN') %></td>
+          </tr>
           <% }) %>
         </tbody>
         <tfoot class="bg-[#334155] font-semibold text-white">
@@ -202,28 +206,29 @@
       rows.forEach(row => tbody.appendChild(row));
     });
   });
-/*  function syncHoldings() {
+
+  function syncHoldings() {
     const btn = document.getElementById("syncHoldingsBtn");
     btn.disabled = true;
     btn.innerHTML = "Syncing...";
-
     fetch("/credentials/sync-zerodha-holdings")
       .then(res => res.text())
       .then(msg => {
         Toastify({
           text: msg,
-          duration: 4000,
+          duration: 3000,
           gravity: "top",
           position: "right",
           backgroundColor: msg.includes("✅") ? "#22c55e" : "#ef4444",
         }).showToast();
         btn.disabled = false;
         btn.innerHTML = "🔄 Sync Holdings";
+        if (msg.includes("✅")) setTimeout(() => location.reload(), 1500);
       })
       .catch(err => {
         Toastify({
           text: "❌ Error syncing holdings",
-          duration: 4000,
+          duration: 3000,
           gravity: "top",
           position: "right",
           backgroundColor: "#ef4444",
@@ -231,55 +236,8 @@
         btn.disabled = false;
         btn.innerHTML = "🔄 Sync Holdings";
       });
-  }*/
-  function syncHoldings() {
-  const btn = document.getElementById("syncHoldingsBtn");
-  btn.disabled = true;
-  btn.innerHTML = "Syncing...";
+  }
 
-  fetch("/credentials/sync-zerodha-holdings")
-    .then(res => res.text())
-    .then(msg => {
-      Toastify({
-        text: msg,
-        duration: 3000,
-        gravity: "top",
-        position: "right",
-        backgroundColor: msg.includes("✅") ? "#22c55e" : "#ef4444",
-      }).showToast();
-
-      btn.disabled = false;
-      btn.innerHTML = "🔄 Sync Holdings";
-
-      // ✅ Auto-reload after a short delay (optional)
-      if (msg.includes("✅")) {
-        setTimeout(() => {
-          location.reload();
-        }, 1500); // Reload after 1.5 seconds
-      }
-
-    })
-    .catch(err => {
-      Toastify({
-        text: "❌ Error syncing holdings",
-        duration: 3000,
-        gravity: "top",
-        position: "right",
-        backgroundColor: "#ef4444",
-      }).showToast();
-
-      btn.disabled = false;
-      btn.innerHTML = "🔄 Sync Holdings";
-    });
-}
-
-</script>
-<!-- html2pdf for AI Report -->
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-<script>
   function generateInsight() {
     const btn = document.getElementById('generateInsightBtn');
     btn.disabled = true;
@@ -292,11 +250,9 @@
           const container = document.getElementById('aiReportContainer');
           const content = document.getElementById('aiReportContent');
           const date = document.getElementById('generatedAt');
-
           content.innerHTML = marked.parse(data.analysis);
-          date.innerText = `📅 Generated: ${new Date().toLocaleString()}`;
+          date.innerText = `Generated: ${new Date().toLocaleString()}`;
           container.classList.remove('hidden');
-
           Toastify({
             text: "✅ AI Insight Generated",
             duration: 4000,
@@ -305,13 +261,13 @@
             backgroundColor: "#22c55e"
           }).showToast();
         } else {
-         Toastify({
-          text: data.error,
-          duration: 4000,
-          gravity: "top",
-          position: "right",
-          backgroundColor: "orange" // amber for warning-style
-        }).showToast();
+          Toastify({
+            text: data.error,
+            duration: 4000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "orange"
+          }).showToast();
         }
       })
       .catch(err => {
@@ -341,5 +297,90 @@
     }).save();
   }
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style>
+  /* AI Report typography tweaks (scoped) */
+  .ai-prose h3 {
+    margin-top: 1.25rem;
+    margin-bottom: .75rem;
+    font-size: 1.125rem;
+    line-height: 1.5rem;
+    font-weight: 800;
+    letter-spacing: .01em;
+    color:#fff;
+    position: relative;
+    padding-left: .875rem;
+  }
+  .ai-prose h3::before {
+    content:'';
+    position:absolute;
+    left:0; top:.15rem; bottom:.15rem;
+    width:4px;
+    border-radius:999px;
+    background: linear-gradient(180deg,#3b82f6 0%, #6366f1 100%);
+    opacity:.9;
+  }
+
+  /* Only top-level UL and LI get card styling */
+  .ai-prose > ul {
+    list-style:none;
+    margin:.25rem 0 1rem 0;
+    padding:0;
+    display:grid;
+    gap:.6rem;
+  }
+  .ai-prose > ul > li {
+    list-style:none;
+    padding:.85rem 1rem;
+    background: rgba(255,255,255,.04);
+    border:1px solid rgba(148,163,184,.16);
+    border-radius:.75rem;
+    box-shadow:0 4px 14px rgba(2,6,23,.25);
+    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  }
+  .ai-prose > ul > li:hover {
+    transform: translateY(-2px);
+    border-color: rgba(99,102,241,.45);
+    box-shadow:0 8px 20px rgba(2,6,23,.35);
+  }
+
+  /* Nested lists stay plain */
+  .ai-prose ul ul {
+    list-style: disc;
+    margin:.5rem 0 .25rem 1.25rem;
+    padding:0;
+    display:block;
+  }
+  .ai-prose ul ul > li {
+    background:transparent;
+    border:0;
+    border-radius:0;
+    padding:.25rem 0;
+    box-shadow:none;
+    transform:none;
+  }
+  
+  .ai-prose strong {
+    position: relative;
+    font-weight: 600;
+    color: #93c5fd; /* light blue */
+    padding-bottom: 1px;
+  }
+  .ai-prose strong::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, #3b82f6 0%, #6366f1 100%);
+    opacity: 0.7;
+    border-radius: 2px;
+  }
+
+</style>
 
 <%- include('../include/footer') %>
